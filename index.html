@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏆 CDM 2026 – Groupe Welsch</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a1628; color: #e8edf5; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
+
+  .hero { text-align: center; margin-bottom: 40px; }
+  .hero-badge { display: inline-block; background: #d4af37; color: #0a1628; font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 4px 14px; border-radius: 20px; margin-bottom: 12px; }
+  .hero-brand { font-size: clamp(26px, 6vw, 36px); font-weight: 900; color: #fff; margin-bottom: 4px; }
+  .hero-sub { font-size: 14px; color: #8ba0bf; }
+
+  .cards { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 360px; }
+
+  .card { display: flex; align-items: center; gap: 16px; background: #0f1e35; border: 1px solid #1e3356; border-radius: 14px; padding: 18px 20px; text-decoration: none; color: inherit; transition: border-color 0.2s, background 0.2s; -webkit-tap-highlight-color: transparent; }
+  .card:active { background: #162b47; }
+  .card.primary { border-color: #d4af37; background: linear-gradient(90deg, rgba(212,175,55,0.08), #0f1e35); }
+  .card-icon { font-size: 28px; flex-shrink: 0; width: 48px; height: 48px; background: #1a2f50; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+  .card-text {}
+  .card-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 3px; }
+  .card-desc { font-size: 12px; color: #5a7a9a; line-height: 1.4; }
+  .card-arrow { margin-left: auto; font-size: 18px; color: #3a5a7a; flex-shrink: 0; }
+  .card.primary .card-arrow { color: #d4af37; }
+
+  .footer { margin-top: 32px; font-size: 11px; color: #2a4a6a; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-badge">🏆 Concours de pronostics</div>
+  <div class="hero-brand">Groupe Welsch</div>
+  <div class="hero-sub">Coupe du Monde 2026 · USA · Canada · Mexique</div>
+</div>
+
+<div class="cards">
+  <a class="card primary" href="formulaire.html">
+    <div class="card-icon">⚽</div>
+    <div class="card-text">
+      <div class="card-title">Mes pronostics</div>
+      <div class="card-desc">Remplis tes pronostics pour la phase de poules · Deadline ce soir 21h</div>
+    </div>
+    <div class="card-arrow">›</div>
+  </a>
+
+  <a class="card" href="classement.html">
+    <div class="card-icon">🏆</div>
+    <div class="card-text">
+      <div class="card-title">Classement</div>
+      <div class="card-desc">Mis à jour quotidiennement · Phase 1 & 2 cumulées</div>
+    </div>
+    <div class="card-arrow">›</div>
+  </a>
+
+  <a class="card" href="https://www.flashscore.fr/football/monde/championnat-du-monde/" target="_blank">
+    <div class="card-icon">📡</div>
+    <div class="card-text">
+      <div class="card-title">Scores en direct</div>
+      <div class="card-desc">Résultats et scores live · Flashscore</div>
+    </div>
+    <div class="card-arrow">↗</div>
+  </a>
+
+  <a class="card" href="https://www.footmercato.net/international/coupe-du-monde/calendrier/" target="_blank">
+    <div class="card-icon">📅</div>
+    <div class="card-text">
+      <div class="card-title">Calendrier des matchs</div>
+      <div class="card-desc">Tous les matchs · Groupes A à L · Footmercato</div>
+    </div>
+    <div class="card-arrow">↗</div>
+  </a>
+</div>
+
+<div class="footer">Groupe Welsch · CDM 2026 · Réservé aux collaborateurs</div>
+
+</body>
+</html>

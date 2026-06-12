@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏆 Pronostics CDM 2026 – Groupe Welsch</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a1628; color: #e8edf5; min-height: 100vh; }
+
+  .hero {
+    background: linear-gradient(135deg, #0a1628 0%, #1a3a6b 50%, #0a1628 100%);
+    border-bottom: 3px solid #d4af37;
+    padding: 28px 20px 20px;
+    text-align: center;
+  }
+  .hero-badge { display: inline-block; background: #d4af37; color: #0a1628; font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 4px 14px; border-radius: 20px; margin-bottom: 10px; }
+  .hero-brand { font-size: clamp(20px, 5vw, 28px); font-weight: 900; color: #fff; margin-bottom: 4px; }
+  .hero h1 { font-size: clamp(14px, 3vw, 18px); font-weight: 600; color: #8ba0bf; }
+  .hero-note { margin-top: 12px; display: inline-block; background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.3); border-radius: 8px; padding: 8px 14px; font-size: 12px; color: #c4a847; line-height: 1.5; }
+
+  .rules { display: flex; justify-content: center; gap: 12px; padding: 14px 20px; background: #0f1e35; border-bottom: 1px solid #1e3356; flex-wrap: wrap; }
+  .rule-chip { display: flex; align-items: center; gap: 8px; background: #1a2f50; border: 1px solid #2a4a7a; border-radius: 30px; padding: 6px 14px; font-size: 13px; }
+  .rule-chip .pts { background: #d4af37; color: #0a1628; font-weight: 800; font-size: 14px; border-radius: 50%; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; }
+
+  /* ÉCRAN CLÔTURE */
+  .closed-screen { display: none; position: fixed; inset: 0; background: #0a1628; z-index: 500; align-items: center; justify-content: center; padding: 24px; flex-direction: column; text-align: center; gap: 16px; }
+  .closed-screen.open { display: flex; }
+  .closed-icon { font-size: 64px; }
+  .closed-title { font-size: 22px; font-weight: 900; color: #fff; }
+  .closed-msg { font-size: 14px; color: #8ba0bf; line-height: 1.6; max-width: 320px; }
+  .closed-link { display: inline-block; margin-top: 8px; background: linear-gradient(135deg, #d4af37, #b8942e); color: #0a1628; font-weight: 800; font-size: 14px; padding: 12px 24px; border-radius: 10px; text-decoration: none; }
+
+  /* IDENTITY SECTION */
+  .identity-section { max-width: 500px; margin: 24px auto; padding: 0 16px; }
+  .identity-card { background: #0f1e35; border: 1px solid #1e3356; border-radius: 14px; padding: 20px; }
+  .identity-card h2 { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .identity-card p { font-size: 12px; color: #5a7a9a; margin-bottom: 16px; }
+  .field-label { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #8ba0bf; margin-bottom: 6px; display: block; }
+  .pseudo-input { width: 100%; background: #1a2f50; border: 2px solid #2a4a7a; border-radius: 10px; color: #fff; font-size: 16px; font-weight: 600; padding: 12px 16px; outline: none; transition: border-color 0.2s; margin-bottom: 14px; }
+  .pseudo-input:focus { border-color: #d4af37; }
+  .pseudo-input::placeholder { color: #4a6080; }
+  .email-row { display: flex; align-items: center; gap: 0; background: #1a2f50; border: 2px solid #2a4a7a; border-radius: 10px; overflow: hidden; transition: border-color 0.2s; }
+  .email-row:focus-within { border-color: #d4af37; }
+  .email-input { flex: 1; background: transparent; border: none; color: #fff; font-size: 15px; font-weight: 600; padding: 12px 12px; outline: none; }
+  .email-input::placeholder { color: #4a6080; }
+  .email-suffix { background: #0f2245; color: #8ba0bf; font-size: 13px; font-weight: 600; padding: 12px 14px; white-space: nowrap; border-left: 1px solid #2a4a7a; }
+
+  .deadline-banner { max-width: 500px; margin: 0 auto 8px; padding: 0 16px; }
+  .deadline-inner { background: rgba(212,55,55,0.1); border: 1px solid rgba(212,55,55,0.3); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #e07070; text-align: center; }
+
+  /* GROUPES */
+  .content { max-width: 580px; margin: 0 auto; padding: 0 16px 120px; }
+  .group-block { margin-bottom: 24px; background: #0f1e35; border-radius: 14px; overflow: hidden; border: 1px solid #1e3356; }
+  .group-header { display: flex; align-items: center; gap: 12px; padding: 12px 18px; background: linear-gradient(90deg, #1a3a6b, #0f2245); border-bottom: 2px solid #d4af37; }
+  .group-letter { background: #d4af37; color: #0a1628; font-weight: 900; font-size: 16px; width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .group-teams { font-size: 12px; color: #8ba0bf; font-style: italic; }
+  .group-name { font-weight: 700; font-size: 15px; color: #fff; }
+
+  .match-row { padding: 10px 14px; border-bottom: 1px solid #162b47; }
+  .match-row:last-child { border-bottom: none; }
+  .match-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .match-date { font-size: 10px; color: #5a7a9a; text-transform: uppercase; letter-spacing: 0.5px; min-width: 52px; flex-shrink: 0; }
+  .match-teams { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; font-weight: 700; }
+  .team { flex: 1; text-align: right; color: #dce8f5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .team.away { text-align: left; }
+  .flag { font-size: 17px; flex-shrink: 0; }
+  .vs-sep { font-size: 9px; color: #3a5a7a; font-weight: 700; flex-shrink: 0; }
+  .match-bottom { display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding-left: 60px; }
+
+  .score-inputs { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .score-box { width: 40px; height: 40px; background: #1a2f50; border: 2px solid #2a4a7a; border-radius: 8px; color: #fff; font-size: 18px; font-weight: 700; text-align: center; outline: none; transition: border-color 0.2s; -webkit-appearance: none; }
+  .score-box:focus { border-color: #d4af37; background: #1e3a60; }
+  .score-dash { color: #4a6a8a; font-weight: 700; font-size: 16px; }
+
+  .result-btns { display: flex; gap: 4px; flex-shrink: 0; }
+  .r-btn { background: #1a2f50; border: 2px solid #2a4a7a; color: #8ba0bf; font-weight: 700; font-size: 13px; border-radius: 6px; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; user-select: none; transition: all 0.15s; }
+  .r-btn:active { transform: scale(0.93); }
+  .r-btn.active-1 { background: #1e6b3a; border-color: #2ea55a; color: #7fdc9f; }
+  .r-btn.active-n { background: #5a4a00; border-color: #d4af37; color: #d4af37; }
+  .r-btn.active-2 { background: #6b1e1e; border-color: #d44a4a; color: #dc9f9f; }
+
+  .progress-bar { height: 3px; background: #1e3356; position: sticky; top: 0; z-index: 50; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #d4af37, #f0cc55); transition: width 0.4s ease; }
+
+  .sticky-bar { position: fixed; bottom: 0; left: 0; right: 0; padding: 12px 16px; background: rgba(10,22,40,0.97); border-top: 2px solid #d4af37; z-index: 100; }
+  .btn-submit { width: 100%; background: linear-gradient(135deg, #d4af37, #b8942e); color: #0a1628; border: none; border-radius: 10px; font-size: 16px; font-weight: 800; padding: 16px; cursor: pointer; letter-spacing: 0.5px; -webkit-tap-highlight-color: transparent; }
+  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* OVERLAY CONFIRMATION */
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(5,12,25,0.95); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+  .overlay.open { display: flex; }
+  .confirm-card { background: #0f1e35; border: 2px solid #d4af37; border-radius: 16px; max-width: 420px; width: 100%; padding: 32px 24px; text-align: center; }
+  .confirm-icon { font-size: 52px; margin-bottom: 16px; }
+  .confirm-card h2 { font-size: 22px; font-weight: 900; color: #fff; margin-bottom: 8px; }
+  .confirm-card p { font-size: 14px; color: #8ba0bf; line-height: 1.6; margin-bottom: 6px; }
+  .confirm-card .name-highlight { font-size: 18px; font-weight: 700; color: #d4af37; margin: 12px 0; }
+  .confirm-card .warning { background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.3); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #c4a847; margin-top: 16px; }
+
+  .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: #e05050; color: #fff; padding: 10px 22px; border-radius: 30px; font-weight: 700; font-size: 14px; z-index: 300; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; }
+
+  /* LOADING */
+  .loading-overlay { display: none; position: fixed; inset: 0; background: rgba(5,12,25,0.92); z-index: 250; align-items: center; justify-content: center; flex-direction: column; gap: 16px; }
+  .loading-overlay.open { display: flex; }
+  .spinner { width: 44px; height: 44px; border: 4px solid #1e3356; border-top-color: #d4af37; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-badge">🏆 Concours de pronostics</div>
+  <div class="hero-brand">Groupe Welsch</div>
+  <h1>Coupe du Monde 2026 · Phase de poules</h1>
+  <div class="hero-note">📩 Un nouveau questionnaire sera envoyé après la phase de poules<br>pour les 16es, 8es, quarts, demis et finale.</div>
+</div>
+
+<div class="rules">
+  <div class="rule-chip"><span class="pts">1</span> pt &nbsp;·&nbsp; Bon résultat 1/N/2</div>
+  <div class="rule-chip"><span class="pts">3</span> pts &nbsp;·&nbsp; Score exact</div>
+</div>
+
+<div class="deadline-banner">
+  <div class="deadline-inner" id="deadlineInner">⏰ <strong>Date limite : aujourd'hui à 21h00</strong> — Passé ce délai, aucune participation ne sera acceptée</div>
+</div>
+
+<div class="identity-section">
+  <div class="identity-card">
+    <h2>Ton identité</h2>
+    <p>Une seule participation possible · Pronostics définitifs après envoi</p>
+    <label class="field-label">Ton prénom affiché dans le classement</label>
+    <input type="text" class="pseudo-input" id="pseudo" placeholder="Ex : Yannick" maxlength="30" />
+    <label class="field-label">Ton email professionnel</label>
+    <div class="email-row">
+      <input type="text" class="email-input" id="emailPrefix" placeholder="prenom.nom" maxlength="40" autocomplete="off" autocapitalize="off" />
+      <span class="email-suffix">@groupewelsch.fr</span>
+    </div>
+  </div>
+</div>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+<div class="content" id="matchesContainer"></div>
+
+<div class="sticky-bar">
+  <button class="btn-submit" id="submitBtn" onclick="submitPronostics()">⚽ Envoyer mes pronostics</button>
+</div>
+
+<!-- Overlay confirmation succès -->
+<div class="overlay" id="successOverlay">
+  <div class="confirm-card">
+    <div class="confirm-icon">🏆</div>
+    <h2>Pronostics enregistrés !</h2>
+    <div class="name-highlight" id="confirmName"></div>
+    <p>Tes pronostics ont bien été enregistrés et <strong>ne peuvent plus être modifiés</strong>.</p>
+    <p>Le classement sera mis à jour quotidiennement.</p>
+    <div class="warning">🔒 Ton email a été verrouillé · Aucune double participation possible</div>
+  </div>
+</div>
+
+<!-- Écran clôture deadline -->
+<div class="closed-screen" id="closedScreen">
+  <div class="closed-icon">🔒</div>
+  <div class="closed-title">Inscriptions clôturées</div>
+  <div class="closed-msg">La deadline de 21h00 est dépassée.<br>Les pronostics ne sont plus acceptés.<br><br>Retrouve le classement en direct ici :</div>
+  <a class="closed-link" href="../classement.html">🏆 Voir le classement</a>
+</div>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <p style="color:#8ba0bf;font-size:14px;">Envoi en cours...</p>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://fafqylzoegiuvzqjfeea.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZhZnF5bHpvZWdpdXZ6cWpmZWVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExNzQxMDQsImV4cCI6MjA5Njc1MDEwNH0.T3YxIsSMTyVoXvcM2jq5cPWBPGuUVKY8Ss4vvLyLzd8';
+
+const GROUPS = [
+  { letter: 'A', teams: ['🇲🇽 Mexique', '🇰🇷 Corée du Sud', '🇿🇦 Afrique du Sud', '🇨🇿 Tchéquie'], matches: [
+    {id:'A1',date:'11 juin',home:'🇲🇽 Mexique',away:'🇿🇦 Afrique du Sud'},
+    {id:'A2',date:'12 juin',home:'🇰🇷 Corée du Sud',away:'🇨🇿 Tchéquie'},
+    {id:'A3',date:'18 juin',home:'🇨🇿 Tchéquie',away:'🇿🇦 Afrique du Sud'},
+    {id:'A4',date:'19 juin',home:'🇲🇽 Mexique',away:'🇰🇷 Corée du Sud'},
+    {id:'A5',date:'25 juin',home:'🇨🇿 Tchéquie',away:'🇲🇽 Mexique'},
+    {id:'A6',date:'25 juin',home:'🇿🇦 Afrique du Sud',away:'🇰🇷 Corée du Sud'}]},
+  { letter: 'B', teams: ['🇨🇦 Canada', '🇧🇦 Bosnie', '🇨🇭 Suisse', '🇶🇦 Qatar'], matches: [
+    {id:'B1',date:'12 juin',home:'🇨🇦 Canada',away:'🇧🇦 Bosnie'},
+    {id:'B2',date:'13 juin',home:'🇶🇦 Qatar',away:'🇨🇭 Suisse'},
+    {id:'B3',date:'18 juin',home:'🇨🇭 Suisse',away:'🇧🇦 Bosnie'},
+    {id:'B4',date:'19 juin',home:'🇨🇦 Canada',away:'🇶🇦 Qatar'},
+    {id:'B5',date:'24 juin',home:'🇨🇭 Suisse',away:'🇨🇦 Canada'},
+    {id:'B6',date:'24 juin',home:'🇧🇦 Bosnie',away:'🇶🇦 Qatar'}]},
+  { letter: 'C', teams: ['🇧🇷 Brésil', '🇲🇦 Maroc', '🇭🇹 Haïti', '🏴󠁧󠁢󠁳󠁣󠁴󠁿 Écosse'], matches: [
+    {id:'C1',date:'14 juin',home:'🇧🇷 Brésil',away:'🇲🇦 Maroc'},
+    {id:'C2',date:'14 juin',home:'🇭🇹 Haïti',away:'🏴󠁧󠁢󠁳󠁣󠁴󠁿 Écosse'},
+    {id:'C3',date:'20 juin',home:'🏴󠁧󠁢󠁳󠁣󠁴󠁿 Écosse',away:'🇲🇦 Maroc'},
+    {id:'C4',date:'20 juin',home:'🇧🇷 Brésil',away:'🇭🇹 Haïti'},
+    {id:'C5',date:'25 juin',home:'🏴󠁧󠁢󠁳󠁣󠁴󠁿 Écosse',away:'🇧🇷 Brésil'},
+    {id:'C6',date:'25 juin',home:'🇲🇦 Maroc',away:'🇭🇹 Haïti'}]},
+  { letter: 'D', teams: ['🇺🇸 États-Unis', '🇵🇾 Paraguay', '🇦🇺 Australie', '🇹🇷 Turquie'], matches: [
+    {id:'D1',date:'13 juin',home:'🇺🇸 États-Unis',away:'🇵🇾 Paraguay'},
+    {id:'D2',date:'14 juin',home:'🇦🇺 Australie',away:'🇹🇷 Turquie'},
+    {id:'D3',date:'19 juin',home:'🇺🇸 États-Unis',away:'🇦🇺 Australie'},
+    {id:'D4',date:'20 juin',home:'🇹🇷 Turquie',away:'🇵🇾 Paraguay'},
+    {id:'D5',date:'26 juin',home:'🇵🇾 Paraguay',away:'🇦🇺 Australie'},
+    {id:'D6',date:'26 juin',home:'🇹🇷 Turquie',away:'🇺🇸 États-Unis'}]},
+  { letter: 'E', teams: ['🇩🇪 Allemagne', "🇨🇮 Côte d\'Ivoire", '🇪🇨 Équateur', '🇨🇼 Curaçao'], matches: [
+    {id:'E1',date:'14 juin',home:'🇩🇪 Allemagne',away:'🇨🇼 Curaçao'},
+    {id:'E2',date:'15 juin',home:"🇨🇮 Côte d\'Ivoire",away:'🇪🇨 Équateur'},
+    {id:'E3',date:'20 juin',home:'🇩🇪 Allemagne',away:"🇨🇮 Côte d\'Ivoire"},
+    {id:'E4',date:'21 juin',home:'🇪🇨 Équateur',away:'🇨🇼 Curaçao'},
+    {id:'E5',date:'25 juin',home:'🇨🇼 Curaçao',away:"🇨🇮 Côte d\'Ivoire"},
+    {id:'E6',date:'25 juin',home:'🇪🇨 Équateur',away:'🇩🇪 Allemagne'}]},
+  { letter: 'F', teams: ['🇳🇱 Pays-Bas', '🇯🇵 Japon', '🇸🇪 Suède', '🇹🇳 Tunisie'], matches: [
+    {id:'F1',date:'14 juin',home:'🇳🇱 Pays-Bas',away:'🇯🇵 Japon'},
+    {id:'F2',date:'15 juin',home:'🇸🇪 Suède',away:'🇹🇳 Tunisie'},
+    {id:'F3',date:'20 juin',home:'🇳🇱 Pays-Bas',away:'🇸🇪 Suède'},
+    {id:'F4',date:'21 juin',home:'🇹🇳 Tunisie',away:'🇯🇵 Japon'},
+    {id:'F5',date:'26 juin',home:'🇯🇵 Japon',away:'🇸🇪 Suède'},
+    {id:'F6',date:'26 juin',home:'🇹🇳 Tunisie',away:'🇳🇱 Pays-Bas'}]},
+  { letter: 'G', teams: ['🇧🇪 Belgique', '🇪🇬 Égypte', '🇮🇷 Iran', '🇳🇿 Nouvelle-Zélande'], matches: [
+    {id:'G1',date:'15 juin',home:'🇧🇪 Belgique',away:'🇪🇬 Égypte'},
+    {id:'G2',date:'16 juin',home:'🇮🇷 Iran',away:'🇳🇿 Nouvelle-Zélande'},
+    {id:'G3',date:'21 juin',home:'🇧🇪 Belgique',away:'🇮🇷 Iran'},
+    {id:'G4',date:'22 juin',home:'🇳🇿 Nouvelle-Zélande',away:'🇪🇬 Égypte'},
+    {id:'G5',date:'27 juin',home:'🇪🇬 Égypte',away:'🇮🇷 Iran'},
+    {id:'G6',date:'27 juin',home:'🇳🇿 Nouvelle-Zélande',away:'🇧🇪 Belgique'}]},
+  { letter: 'H', teams: ['🇪🇸 Espagne', '🇺🇾 Uruguay', '🇸🇦 Arabie Saoudite', '🇨🇻 Cap-Vert'], matches: [
+    {id:'H1',date:'15 juin',home:'🇪🇸 Espagne',away:'🇨🇻 Cap-Vert'},
+    {id:'H2',date:'16 juin',home:'🇺🇾 Uruguay',away:'🇸🇦 Arabie Saoudite'},
+    {id:'H3',date:'21 juin',home:'🇪🇸 Espagne',away:'🇸🇦 Arabie Saoudite'},
+    {id:'H4',date:'22 juin',home:'🇺🇾 Uruguay',away:'🇨🇻 Cap-Vert'},
+    {id:'H5',date:'27 juin',home:'🇨🇻 Cap-Vert',away:'🇸🇦 Arabie Saoudite'},
+    {id:'H6',date:'27 juin',home:'🇺🇾 Uruguay',away:'🇪🇸 Espagne'}]},
+  { letter: 'I', teams: ['🇫🇷 France', '🇸🇳 Sénégal', '🇳🇴 Norvège', '🇮🇶 Irak'], matches: [
+    {id:'I1',date:'16 juin',home:'🇫🇷 France',away:'🇸🇳 Sénégal'},
+    {id:'I2',date:'17 juin',home:'🇮🇶 Irak',away:'🇳🇴 Norvège'},
+    {id:'I3',date:'22 juin',home:'🇫🇷 France',away:'🇮🇶 Irak'},
+    {id:'I4',date:'23 juin',home:'🇳🇴 Norvège',away:'🇸🇳 Sénégal'},
+    {id:'I5',date:'26 juin',home:'🇳🇴 Norvège',away:'🇫🇷 France'},
+    {id:'I6',date:'26 juin',home:'🇸🇳 Sénégal',away:'🇮🇶 Irak'}]},
+  { letter: 'J', teams: ['🇦🇷 Argentine', '🇩🇿 Algérie', '🇦🇹 Autriche', '🇯🇴 Jordanie'], matches: [
+    {id:'J1',date:'17 juin',home:'🇦🇷 Argentine',away:'🇩🇿 Algérie'},
+    {id:'J2',date:'17 juin',home:'🇦🇹 Autriche',away:'🇯🇴 Jordanie'},
+    {id:'J3',date:'22 juin',home:'🇦🇷 Argentine',away:'🇦🇹 Autriche'},
+    {id:'J4',date:'23 juin',home:'🇯🇴 Jordanie',away:'🇩🇿 Algérie'},
+    {id:'J5',date:'28 juin',home:'🇩🇿 Algérie',away:'🇦🇹 Autriche'},
+    {id:'J6',date:'28 juin',home:'🇯🇴 Jordanie',away:'🇦🇷 Argentine'}]},
+  { letter: 'K', teams: ['🇵🇹 Portugal', '🇨🇩 RD Congo', '🇺🇿 Ouzbékistan', '🇨🇴 Colombie'], matches: [
+    {id:'K1',date:'17 juin',home:'🇵🇹 Portugal',away:'🇨🇩 RD Congo'},
+    {id:'K2',date:'18 juin',home:'🇺🇿 Ouzbékistan',away:'🇨🇴 Colombie'},
+    {id:'K3',date:'23 juin',home:'🇵🇹 Portugal',away:'🇺🇿 Ouzbékistan'},
+    {id:'K4',date:'24 juin',home:'🇨🇴 Colombie',away:'🇨🇩 RD Congo'},
+    {id:'K5',date:'28 juin',home:'🇨🇴 Colombie',away:'🇵🇹 Portugal'},
+    {id:'K6',date:'28 juin',home:'🇨🇩 RD Congo',away:'🇺🇿 Ouzbékistan'}]},
+  { letter: 'L', teams: ['🏴󠁧󠁢󠁥󠁮󠁧󠁿 Angleterre', '🇭🇷 Croatie', '🇬🇭 Ghana', '🇵🇦 Panama'], matches: [
+    {id:'L1',date:'17 juin',home:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Angleterre',away:'🇭🇷 Croatie'},
+    {id:'L2',date:'18 juin',home:'🇬🇭 Ghana',away:'🇵🇦 Panama'},
+    {id:'L3',date:'23 juin',home:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Angleterre',away:'🇬🇭 Ghana'},
+    {id:'L4',date:'24 juin',home:'🇵🇦 Panama',away:'🇭🇷 Croatie'},
+    {id:'L5',date:'27 juin',home:'🇵🇦 Panama',away:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Angleterre'},
+    {id:'L6',date:'27 juin',home:'🇭🇷 Croatie',away:'🇬🇭 Ghana'}]}
+];
+
+
+const state = {};
+
+function shortName(t) { return t.replace(/^[^\s]+\s/, ''); }
+function getFlag(t) { return t.split(' ')[0]; }
+
+function render() {
+  const container = document.getElementById('matchesContainer');
+  GROUPS.forEach(g => {
+    const block = document.createElement('div');
+    block.className = 'group-block';
+    const teamNames = g.teams.map(t => shortName(t)).join(' · ');
+    block.innerHTML = `<div class="group-header"><div class="group-letter">${g.letter}</div><div><div class="group-name">Groupe ${g.letter}</div><div class="group-teams">${teamNames}</div></div></div>`;
+    g.matches.forEach(m => {
+      const id = m.id;
+      state[id] = { home: '', away: '', result: '' };
+      const row = document.createElement('div');
+      row.className = 'match-row';
+      row.innerHTML = `
+        <div class="match-top">
+          <div class="match-date">${m.date}</div>
+          <div class="match-teams">
+            <span class="team">${shortName(m.home)}</span>
+            <span class="flag">${getFlag(m.home)}</span>
+            <span class="vs-sep">vs</span>
+            <span class="flag">${getFlag(m.away)}</span>
+            <span class="team away">${shortName(m.away)}</span>
+          </div>
+        </div>
+        <div class="match-bottom">
+          <div class="score-inputs">
+            <input class="score-box" type="number" min="0" max="20" placeholder="?" id="h_${id}" oninput="onScore('${id}','home',this.value)">
+            <span class="score-dash">–</span>
+            <input class="score-box" type="number" min="0" max="20" placeholder="?" id="a_${id}" oninput="onScore('${id}','away',this.value)">
+          </div>
+          <div class="result-btns">
+            <button class="r-btn" id="r1_${id}" onclick="setResult('${id}','1')">1</button>
+            <button class="r-btn" id="rn_${id}" onclick="setResult('${id}','N')">N</button>
+            <button class="r-btn" id="r2_${id}" onclick="setResult('${id}','2')">2</button>
+          </div>
+        </div>`;
+      block.appendChild(row);
+    });
+    container.appendChild(block);
+  });
+  updateProgress();
+}
+
+function onScore(id, side, val) {
+  state[id][side] = val;
+  const h = parseInt(state[id].home), a = parseInt(state[id].away);
+  if (!isNaN(h) && !isNaN(a)) setResult(id, h > a ? '1' : a > h ? '2' : 'N');
+  updateProgress();
+}
+
+function setResult(id, r) {
+  state[id].result = r;
+  ['1','N','2'].forEach(x => {
+    const el = document.getElementById(`r${x==='N'?'n':x}_${id}`);
+    if (el) { el.className = 'r-btn'; if (r===x) el.classList.add(x==='1'?'active-1':x==='N'?'active-n':'active-2'); }
+  });
+  updateProgress();
+}
+
+function updateProgress() {
+  const total = Object.keys(state).length;
+  const filled = Object.values(state).filter(s => s.result).length;
+  document.getElementById('progressFill').style.width = (filled/total*100)+'%';
+}
+
+async function submitPronostics() {
+  if (checkDeadline()) return;
+  const pseudo = document.getElementById('pseudo').value.trim();
+  const emailPrefix = document.getElementById('emailPrefix').value.trim().toLowerCase();
+
+  if (!pseudo) { showToast('⚠️ Saisis ton prénom'); return; }
+  if (!emailPrefix) { showToast('⚠️ Saisis ton email professionnel'); return; }
+  if (!/^[a-z0-9._-]+$/.test(emailPrefix)) { showToast('⚠️ Email invalide'); return; }
+
+  const filled = Object.values(state).filter(s => s.result).length;
+  const total = Object.keys(state).length;
+  if (filled < total * 0.5) {
+    showToast(`⚠️ Remplis au moins la moitié des matchs (${filled}/${total})`);
+    return;
+  }
+
+  const email = emailPrefix + '@groupewelsch.fr';
+  document.getElementById('loadingOverlay').classList.add('open');
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/pronostics`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        email: email,
+        pseudo: pseudo,
+        phase: 1,
+        pronos: state
+      })
+    });
+
+    document.getElementById('loadingOverlay').classList.remove('open');
+
+    if (res.status === 409 || res.status === 400) {
+      showToast('❌ Cet email a déjà participé !');
+      return;
+    }
+    if (!res.ok) {
+      const err = await res.text();
+      if (err.includes('duplicate') || err.includes('unique')) {
+        showToast('❌ Cet email a déjà participé !');
+      } else {
+        showToast('❌ Erreur d\'envoi. Réessaie.');
+      }
+      return;
+    }
+
+    // Succès
+    document.getElementById('confirmName').textContent = pseudo + ' 🎉';
+    document.getElementById('successOverlay').classList.add('open');
+    document.getElementById('submitBtn').disabled = true;
+
+    // Initialiser le score
+    await fetch(`${SUPABASE_URL}/rest/v1/scores`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ email, pseudo, phase: 1, points_phase1: 0, points_phase2: 0, total_points: 0 })
+    });
+
+  } catch(e) {
+    document.getElementById('loadingOverlay').classList.remove('open');
+    showToast('❌ Erreur réseau. Réessaie.');
+  }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = msg.includes('✅') ? '#2ea55a' : '#d44040';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Vérification deadline 21h00
+function checkDeadline() {
+  const now = new Date();
+  const deadline = new Date(now);
+  deadline.setHours(21, 0, 0, 0);
+  if (now >= deadline) {
+    document.getElementById('closedScreen').classList.add('open');
+    const btn = document.getElementById('submitBtn');
+    if (btn) { btn.disabled = true; btn.textContent = '🔒 Inscriptions clôturées'; btn.style.background = '#1a2f50'; btn.style.color = '#5a7a9a'; }
+    return true;
+  }
+  // Compte à rebours affiché dans le banner
+  const diff = deadline - now;
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+  const banner = document.getElementById('deadlineInner');
+  if (banner) banner.innerHTML = `⏰ <strong>Fermeture dans ${h}h${String(m).padStart(2,'0')}min${String(s).padStart(2,'0')}s</strong> — Deadline aujourd'hui à 21h00`;
+  return false;
+}
+
+render();
+if (!checkDeadline()) {
+  setInterval(checkDeadline, 1000);
+}
+</script>
+</body>
+</html>
