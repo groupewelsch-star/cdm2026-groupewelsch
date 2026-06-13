@@ -264,7 +264,7 @@ async function loadClassement() {
   try {
     // Load scores, pronostics and resultats in parallel
     const [resScores, resPronos, resResultats] = await Promise.all([
-      fetch(`${SUPABASE_URL}/rest/v1/scores?order=total_points.desc`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+      fetch(`${SUPABASE_URL}/rest/v1/scores?select=*&order=total_points.desc`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
       fetch(`${SUPABASE_URL}/rest/v1/pronostics`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
       fetch(`${SUPABASE_URL}/rest/v1/resultats`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
     ]);
@@ -364,8 +364,15 @@ function renderRanking() {
 
 function showDetail(email) {
   const participant = allPronostics[email];
-  const scoreData = allScores.find(s => s.email === email);
-  if (!participant || !scoreData) return;
+  // Try finding scoreData by email first, then by pseudo fallback
+  let scoreData = allScores.find(s => s.email === email);
+  if (!scoreData && participant) {
+    scoreData = allScores.find(s => s.pseudo === participant.pseudo);
+  }
+  if (!participant || !scoreData) {
+    alert('Pronostics non disponibles pour ce participant.');
+    return;
+  }
 
   const initials = scoreData.pseudo.split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2);
   document.getElementById('detailAvatar').textContent = initials;
