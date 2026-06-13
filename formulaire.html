@@ -161,9 +161,18 @@
 <!-- Écran clôture deadline -->
 <div class="closed-screen" id="closedScreen">
   <div class="closed-icon">🔒</div>
-  <div class="closed-title">Inscriptions clôturées</div>
-  <div class="closed-msg">La deadline de 21h00 est dépassée.<br>Les pronostics ne sont plus acceptés.<br><br>Retrouve le classement en direct ici :</div>
-  <a class="closed-link" href="../classement.html">🏆 Voir le classement</a>
+  <div class="closed-title">Phase de poules clôturée</div>
+  <div class="closed-msg">
+    Les pronostics pour la <strong>phase de poules</strong> sont définitivement fermés.<br><br>
+    📅 Un nouveau tableau de pronostics sera ouvert pour chaque phase finale :<br><br>
+    <strong>16es de finale</strong> · clôture la veille à 23h59<br>
+    <strong>8es de finale</strong> · clôture la veille à 23h59<br>
+    <strong>Quarts de finale</strong> · clôture la veille à 23h59<br>
+    <strong>Demi-finales</strong> · clôture la veille à 23h59<br>
+    <strong>Finale</strong> · clôture la veille à 23h59<br><br>
+    Les points s'accumulent sur toute la compétition 🏆
+  </div>
+  <a class="closed-link" href="classement.html">🏆 Voir le classement</a>
 </div>
 
 <!-- Loading -->
@@ -418,31 +427,16 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// Vérification deadline 21h00
+// Inscriptions définitivement clôturées
 function checkDeadline() {
-  const now = new Date();
-  const deadline = new Date(now);
-  deadline.setHours(21, 0, 0, 0);
-  if (now >= deadline) {
-    document.getElementById('closedScreen').classList.add('open');
-    const btn = document.getElementById('submitBtn');
-    if (btn) { btn.disabled = true; btn.textContent = '🔒 Inscriptions clôturées'; btn.style.background = '#1a2f50'; btn.style.color = '#5a7a9a'; }
-    return true;
-  }
-  // Compte à rebours affiché dans le banner
-  const diff = deadline - now;
-  const h = Math.floor(diff / 3600000);
-  const m = Math.floor((diff % 3600000) / 60000);
-  const s = Math.floor((diff % 60000) / 1000);
-  const banner = document.getElementById('deadlineInner');
-  if (banner) banner.innerHTML = `⏰ <strong>Fermeture dans ${h}h${String(m).padStart(2,'0')}min${String(s).padStart(2,'0')}s</strong> — Deadline aujourd'hui à 21h00`;
-  return false;
+  document.getElementById('closedScreen').classList.add('open');
+  const btn = document.getElementById('submitBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '🔒 Inscriptions clôturées'; btn.style.background = '#1a2f50'; btn.style.color = '#5a7a9a'; }
+  return true;
 }
 
 render();
-if (!checkDeadline()) {
-  setInterval(checkDeadline, 1000);
-}
+checkDeadline();
 </script>
 </body>
 </html>
