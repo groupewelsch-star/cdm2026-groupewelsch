@@ -55,6 +55,8 @@
   .score-admin-dash { color: #4a6a8a; font-weight: 700; }
   .save-match-btn { background: #1e6b3a; border: 1px solid #2ea55a; color: #7fdc9f; border-radius: 6px; font-size: 11px; font-weight: 700; padding: 6px 12px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .save-match-btn:active { opacity: 0.8; }
+  .delete-match-btn { background: #3a1a1a; border: 1px solid #8b3030; color: #e07070; border-radius: 6px; font-size: 11px; font-weight: 700; padding: 6px 10px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .delete-match-btn:active { opacity: 0.8; }
   .match-status { font-size: 10px; padding: 3px 8px; border-radius: 4px; flex-shrink: 0; }
   .match-status.done { background: rgba(46,165,90,0.2); color: #7fdc9f; border: 1px solid rgba(46,165,90,0.3); }
   .match-status.pending { background: rgba(90,122,154,0.2); color: #5a7a9a; border: 1px solid rgba(90,122,154,0.3); }
@@ -406,6 +408,24 @@ async function saveMatchDirect(matchId, home, away, h, a, phase) {
   const url = exists ? `${SUPABASE_URL}/rest/v1/resultats?match_id=eq.${matchId}` : `${SUPABASE_URL}/rest/v1/resultats`;
   await fetch(url, { method, headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' }, body: JSON.stringify(payload) });
   resultatsDB[matchId] = payload;
+}
+
+async function deleteMatch(matchId) {
+  if (!confirm(`Supprimer le résultat du match ${matchId} ?`)) return;
+
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/resultats?match_id=eq.${matchId}`, {
+    method: 'DELETE',
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' }
+  });
+
+  if (res.ok) {
+    delete resultatsDB[matchId];
+    showToast(`✅ Résultat ${matchId} supprimé`);
+    renderMatchsAdmin();
+    await recalculerTousLesPoints();
+  } else {
+    showToast('❌ Erreur suppression', 'error');
+  }
 }
 
 async function recalculerTousLesPoints() {
