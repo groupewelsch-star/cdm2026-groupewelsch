@@ -326,6 +326,7 @@ function renderMatchsAdmin() {
           <span class="score-admin-dash">–</span>
           <input class="score-admin-box" type="number" min="0" max="20" id="aa_${m.id}" placeholder="?" value="${isDone?r.away_score:''}">
           <button class="save-match-btn" onclick="saveMatch('${m.id}','${m.home.replace(/'/g,"\\'")}','${m.away.replace(/'/g,"\\'")}',1)">💾 Sauver</button>
+          ${isDone ? `<button class="delete-match-btn" onclick="deleteMatch('${m.id}')">🗑️ Annuler</button>` : ""}
         </div>`;
       block.appendChild(row);
     });
