@@ -276,11 +276,7 @@ async function loadClassement() {
     allResultats = {};
     resultatsData.forEach(r => { allResultats[r.match_id] = r; });
 
-    const fakeRes = { json: async () => allScores };
-    const res = fakeRes; {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-    });
-    // allScores already loaded above
+
 
     // Stats
     document.getElementById('statParticipants').textContent = allScores.length;
