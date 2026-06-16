@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📅 Calendrier – Groupe Welsch</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a1628; color: #e8edf5; min-height: 100vh; }
+
+  .nav-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: #070f1e; border-bottom: 1px solid #1e3356; }
+  .nav-logo { font-size: 13px; font-weight: 700; color: #d4af37; }
+  .nav-menu-btn { display: flex; align-items: center; gap: 6px; background: #1a2f50; border: 1px solid #2a4a7a; color: #8ba0bf; font-size: 12px; font-weight: 600; border-radius: 20px; padding: 7px 14px; text-decoration: none; -webkit-tap-highlight-color: transparent; }
+  .nav-menu-btn:active { opacity: 0.75; }
+
+  .hero { background: linear-gradient(135deg, #0a1628 0%, #1a3a6b 50%, #0a1628 100%); border-bottom: 3px solid #d4af37; padding: 22px 20px 16px; text-align: center; }
+  .hero-brand { font-size: clamp(18px, 4vw, 24px); font-weight: 900; color: #fff; margin-bottom: 2px; }
+  .hero-sub { font-size: 12px; color: #8ba0bf; }
+
+  .content { max-width: 580px; margin: 0 auto; padding: 16px 16px 40px; }
+
+  .day-block { margin-bottom: 18px; }
+  .day-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #5a7a9a; margin-bottom: 8px; padding-left: 4px; }
+
+  .match-card { display: flex; align-items: center; gap: 10px; background: #0f1e35; border: 1px solid #1e3356; border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background 0.15s; }
+  .match-card:active { background: #162b47; }
+  .match-card.played { border-color: #2a4a7a; }
+
+  .match-group-tag { background: #d4af37; color: #0a1628; font-weight: 900; font-size: 10px; width: 22px; height: 22px; border-radius: 5px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+  .match-info { flex: 1; min-width: 0; }
+  .match-teams { font-size: 13px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 5px; }
+  .match-teams .vs { font-size: 10px; color: #5a7a9a; font-weight: 600; }
+
+  .match-score-zone { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
+  .match-score { font-size: 16px; font-weight: 900; color: #d4af37; }
+  .match-score.pending { font-size: 11px; color: #3a5a7a; font-weight: 600; }
+  .match-pts { font-size: 10px; color: #5a7a9a; font-weight: 600; }
+  .match-pts strong { color: #2ea55a; }
+
+  .match-chevron { font-size: 16px; color: #3a5a7a; flex-shrink: 0; }
+
+  .loading { text-align: center; padding: 40px; color: #5a7a9a; }
+  .spinner { width: 32px; height: 32px; border: 3px solid #1e3356; border-top-color: #d4af37; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="nav-bar">
+  <div class="nav-logo">🏆 CDM 2026</div>
+  <a class="nav-menu-btn" href="index.html">☰ Menu</a>
+</div>
+
+<div class="hero">
+  <div class="hero-brand">📅 Calendrier des matchs</div>
+  <div class="hero-sub">Scores réels · Points distribués au groupe</div>
+</div>
+
+<div class="content" id="calendarContainer">
+  <div class="loading"><div class="spinner"></div><p>Chargement du calendrier...</p></div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://fafqylzoegiuvzqjfeea.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZhZnF5bHpvZWdpdXZ6cWpmZWVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExNzQxMDQsImV4cCI6MjA5Njc1MDEwNH0.T3YxIsSMTyVoXvcM2jq5cPWBPGuUVKY8Ss4vvLyLzd8';
+
+const GROUPS = [
+  { letter:'A', matches:[
+    {id:'A1',date:'11 juin',home:'Mexique',away:'Afrique du Sud'},{id:'A2',date:'12 juin',home:'Corée du Sud',away:'Tchéquie'},
+    {id:'A3',date:'18 juin',home:'Tchéquie',away:'Afrique du Sud'},{id:'A4',date:'19 juin',home:'Mexique',away:'Corée du Sud'},
+    {id:'A5',date:'25 juin',home:'Tchéquie',away:'Mexique'},{id:'A6',date:'25 juin',home:'Afrique du Sud',away:'Corée du Sud'}]},
+  { letter:'B', matches:[
+    {id:'B1',date:'12 juin',home:'Canada',away:'Bosnie'},{id:'B2',date:'13 juin',home:'Qatar',away:'Suisse'},
+    {id:'B3',date:'18 juin',home:'Suisse',away:'Bosnie'},{id:'B4',date:'19 juin',home:'Canada',away:'Qatar'},
+    {id:'B5',date:'24 juin',home:'Suisse',away:'Canada'},{id:'B6',date:'24 juin',home:'Bosnie',away:'Qatar'}]},
+  { letter:'C', matches:[
+    {id:'C1',date:'14 juin',home:'Brésil',away:'Maroc'},{id:'C2',date:'14 juin',home:'Haïti',away:'Écosse'},
+    {id:'C3',date:'20 juin',home:'Écosse',away:'Maroc'},{id:'C4',date:'20 juin',home:'Brésil',away:'Haïti'},
+    {id:'C5',date:'25 juin',home:'Écosse',away:'Brésil'},{id:'C6',date:'25 juin',home:'Maroc',away:'Haïti'}]},
+  { letter:'D', matches:[
+    {id:'D1',date:'13 juin',home:'États-Unis',away:'Paraguay'},{id:'D2',date:'14 juin',home:'Australie',away:'Turquie'},
+    {id:'D3',date:'19 juin',home:'États-Unis',away:'Australie'},{id:'D4',date:'20 juin',home:'Turquie',away:'Paraguay'},
+    {id:'D5',date:'26 juin',home:'Paraguay',away:'Australie'},{id:'D6',date:'26 juin',home:'Turquie',away:'États-Unis'}]},
+  { letter:'E', matches:[
+    {id:'E1',date:'14 juin',home:'Allemagne',away:'Curaçao'},{id:'E2',date:'15 juin',home:"Côte d'Ivoire",away:'Équateur'},
+    {id:'E3',date:'20 juin',home:'Allemagne',away:"Côte d'Ivoire"},{id:'E4',date:'21 juin',home:'Équateur',away:'Curaçao'},
+    {id:'E5',date:'25 juin',home:'Curaçao',away:"Côte d'Ivoire"},{id:'E6',date:'25 juin',home:'Équateur',away:'Allemagne'}]},
+  { letter:'F', matches:[
+    {id:'F1',date:'14 juin',home:'Pays-Bas',away:'Japon'},{id:'F2',date:'15 juin',home:'Suède',away:'Tunisie'},
+    {id:'F3',date:'20 juin',home:'Pays-Bas',away:'Suède'},{id:'F4',date:'21 juin',home:'Tunisie',away:'Japon'},
+    {id:'F5',date:'26 juin',home:'Japon',away:'Suède'},{id:'F6',date:'26 juin',home:'Tunisie',away:'Pays-Bas'}]},
+  { letter:'G', matches:[
+    {id:'G1',date:'15 juin',home:'Belgique',away:'Égypte'},{id:'G2',date:'16 juin',home:'Iran',away:'Nouvelle-Zélande'},
+    {id:'G3',date:'21 juin',home:'Belgique',away:'Iran'},{id:'G4',date:'22 juin',home:'Nouvelle-Zélande',away:'Égypte'},
+    {id:'G5',date:'27 juin',home:'Égypte',away:'Iran'},{id:'G6',date:'27 juin',home:'Nouvelle-Zélande',away:'Belgique'}]},
+  { letter:'H', matches:[
+    {id:'H1',date:'15 juin',home:'Espagne',away:'Cap-Vert'},{id:'H2',date:'16 juin',home:'Uruguay',away:'Arabie Saoudite'},
+    {id:'H3',date:'21 juin',home:'Espagne',away:'Arabie Saoudite'},{id:'H4',date:'22 juin',home:'Uruguay',away:'Cap-Vert'},
+    {id:'H5',date:'27 juin',home:'Cap-Vert',away:'Arabie Saoudite'},{id:'H6',date:'27 juin',home:'Uruguay',away:'Espagne'}]},
+  { letter:'I', matches:[
+    {id:'I1',date:'16 juin',home:'France',away:'Sénégal'},{id:'I2',date:'17 juin',home:'Irak',away:'Norvège'},
+    {id:'I3',date:'22 juin',home:'France',away:'Irak'},{id:'I4',date:'23 juin',home:'Norvège',away:'Sénégal'},
+    {id:'I5',date:'26 juin',home:'Norvège',away:'France'},{id:'I6',date:'26 juin',home:'Sénégal',away:'Irak'}]},
+  { letter:'J', matches:[
+    {id:'J1',date:'17 juin',home:'Argentine',away:'Algérie'},{id:'J2',date:'17 juin',home:'Autriche',away:'Jordanie'},
+    {id:'J3',date:'22 juin',home:'Argentine',away:'Autriche'},{id:'J4',date:'23 juin',home:'Jordanie',away:'Algérie'},
+    {id:'J5',date:'28 juin',home:'Algérie',away:'Autriche'},{id:'J6',date:'28 juin',home:'Jordanie',away:'Argentine'}]},
+  { letter:'K', matches:[
+    {id:'K1',date:'17 juin',home:'Portugal',away:'RD Congo'},{id:'K2',date:'18 juin',home:'Ouzbékistan',away:'Colombie'},
+    {id:'K3',date:'23 juin',home:'Portugal',away:'Ouzbékistan'},{id:'K4',date:'24 juin',home:'Colombie',away:'RD Congo'},
+    {id:'K5',date:'28 juin',home:'Colombie',away:'Portugal'},{id:'K6',date:'28 juin',home:'RD Congo',away:'Ouzbékistan'}]},
+  { letter:'L', matches:[
+    {id:'L1',date:'17 juin',home:'Angleterre',away:'Croatie'},{id:'L2',date:'18 juin',home:'Ghana',away:'Panama'},
+    {id:'L3',date:'23 juin',home:'Angleterre',away:'Ghana'},{id:'L4',date:'24 juin',home:'Panama',away:'Croatie'},
+    {id:'L5',date:'27 juin',home:'Panama',away:'Angleterre'},{id:'L6',date:'27 juin',home:'Croatie',away:'Ghana'}]}
+];
+
+const DATE_ORDER = ['11 juin','12 juin','13 juin','14 juin','15 juin','16 juin','17 juin','18 juin','19 juin','20 juin','21 juin','22 juin','23 juin','24 juin','25 juin','26 juin','27 juin','28 juin','29 juin','30 juin'];
+
+function buildMatchList() {
+  const list = [];
+  GROUPS.forEach(g => {
+    g.matches.forEach(m => {
+      list.push({ ...m, group: g.letter });
+    });
+  });
+  list.sort((a, b) => DATE_ORDER.indexOf(a.date) - DATE_ORDER.indexOf(b.date));
+  return list;
+}
+
+async function loadCalendar() {
+  const container = document.getElementById('calendarContainer');
+
+  try {
+    const [resResultats, resPronostics] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/resultats`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+      fetch(`${SUPABASE_URL}/rest/v1/pronostics`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
+    ]);
+    const resultatsData = await resResultats.json();
+    const pronosticsData = await resPronostics.json();
+
+    const resultatsByMatch = {};
+    resultatsData.forEach(r => { resultatsByMatch[r.match_id] = r; });
+
+    sessionStorage.setItem('cdm_resultats', JSON.stringify(resultatsByMatch));
+    sessionStorage.setItem('cdm_pronostics', JSON.stringify(pronosticsData));
+
+    const matchList = buildMatchList();
+    let currentDate = null;
+    let html = '';
+
+    matchList.forEach(m => {
+      if (m.date !== currentDate) {
+        if (currentDate !== null) html += '</div>';
+        currentDate = m.date;
+        html += `<div class="day-block"><div class="day-title">${m.date}</div>`;
+      }
+
+      const reel = resultatsByMatch[m.id];
+      const isDone = reel && reel.home_score !== null && reel.home_score !== undefined;
+
+      let totalPts = 0;
+      if (isDone) {
+        pronosticsData.forEach(p => {
+          const prono = (p.pronos || {})[m.id];
+          if (!prono) return;
+          const pH = parseInt(prono.home), pA = parseInt(prono.away);
+          if (!isNaN(pH) && !isNaN(pA) && pH === reel.home_score && pA === reel.away_score) {
+            totalPts += 3;
+          } else if (prono.result && prono.result === reel.result) {
+            totalPts += 1;
+          }
+        });
+      }
+
+      const scoreHTML = isDone
+        ? `<div class="match-score">${reel.home_score}-${reel.away_score}</div><div class="match-pts">Total : <strong>${totalPts} pts</strong></div>`
+        : `<div class="match-score pending">⏳ À venir</div>`;
+
+      html += `<div class="match-card ${isDone?'played':''}" onclick="goToMatch('${m.id}')">
+        <div class="match-group-tag">${m.group}</div>
+        <div class="match-info">
+          <div class="match-teams">${m.home} <span class="vs">vs</span> ${m.away}</div>
+        </div>
+        <div class="match-score-zone">${scoreHTML}</div>
+        <div class="match-chevron">›</div>
+      </div>`;
+    });
+
+    html += '</div>';
+    container.innerHTML = html;
+
+  } catch(e) {
+    container.innerHTML = '<p style="color:#5a7a9a;text-align:center;padding:40px">Erreur de chargement. Réessaie.</p>';
+  }
+}
+
+function goToMatch(matchId) {
+  window.location.href = `match-detail.html?id=${matchId}`;
+}
+
+loadCalendar();
+</script>
+</body>
+</html>

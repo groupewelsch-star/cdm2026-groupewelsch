@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚽ Détail match – Groupe Welsch</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a1628; color: #e8edf5; min-height: 100vh; }
+
+  .nav-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: #070f1e; border-bottom: 1px solid #1e3356; }
+  .nav-back { display: flex; align-items: center; gap: 6px; background: #1a2f50; border: 1px solid #2a4a7a; color: #8ba0bf; font-size: 12px; font-weight: 600; border-radius: 20px; padding: 7px 14px; text-decoration: none; -webkit-tap-highlight-color: transparent; }
+  .nav-back:active { opacity: 0.75; }
+  .nav-menu-btn { display: flex; align-items: center; gap: 6px; background: #1a2f50; border: 1px solid #2a4a7a; color: #8ba0bf; font-size: 12px; font-weight: 600; border-radius: 20px; padding: 7px 14px; text-decoration: none; -webkit-tap-highlight-color: transparent; }
+
+  .hero { background: linear-gradient(135deg, #0a1628 0%, #1a3a6b 50%, #0a1628 100%); border-bottom: 3px solid #d4af37; padding: 24px 20px 20px; text-align: center; }
+  .hero-group { display: inline-block; background: #d4af37; color: #0a1628; font-size: 11px; font-weight: 800; letter-spacing: 1px; border-radius: 20px; padding: 4px 14px; margin-bottom: 10px; }
+  .hero-teams { font-size: clamp(18px, 4.5vw, 24px); font-weight: 900; color: #fff; margin-bottom: 6px; }
+  .hero-teams .vs { font-size: 14px; color: #5a7a9a; font-weight: 600; margin: 0 8px; }
+  .hero-score { font-size: 36px; font-weight: 900; color: #d4af37; margin-top: 6px; }
+  .hero-score.pending { font-size: 16px; color: #5a7a9a; font-weight: 600; }
+  .hero-date { font-size: 12px; color: #8ba0bf; margin-top: 4px; }
+
+  .content { max-width: 580px; margin: 0 auto; padding: 16px; }
+
+  .summary-bar { display: flex; justify-content: space-around; background: #0f1e35; border: 1px solid #1e3356; border-radius: 14px; padding: 16px; margin-bottom: 18px; }
+  .summary-item { text-align: center; }
+  .summary-val { font-size: 20px; font-weight: 900; color: #d4af37; }
+  .summary-lbl { font-size: 10px; color: #5a7a9a; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+  .section-title { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #5a7a9a; margin: 18px 0 10px; }
+
+  .pred-row { display: flex; align-items: center; gap: 12px; background: #0f1e35; border: 1px solid #1e3356; border-radius: 12px; padding: 12px 14px; margin-bottom: 6px; }
+  .pred-row.win3 { border-color: #d4af37; background: linear-gradient(90deg, rgba(212,175,55,0.08), #0f1e35); }
+  .pred-row.win1 { border-color: #2ea55a; background: linear-gradient(90deg, rgba(46,165,90,0.08), #0f1e35); }
+  .pred-name { flex: 1; font-size: 14px; font-weight: 700; color: #fff; }
+  .pred-score { font-size: 13px; font-weight: 700; color: #8ba0bf; }
+  .pred-pts { font-size: 14px; font-weight: 900; min-width: 30px; text-align: right; }
+  .pred-pts.pts3 { color: #d4af37; }
+  .pred-pts.pts1 { color: #2ea55a; }
+  .pred-pts.pts0 { color: #3a5a7a; }
+
+  .empty-msg { text-align: center; color: #5a7a9a; font-size: 13px; padding: 30px 16px; }
+
+  .loading { text-align: center; padding: 40px; color: #5a7a9a; }
+  .spinner { width: 32px; height: 32px; border: 3px solid #1e3356; border-top-color: #d4af37; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="nav-bar">
+  <a class="nav-back" href="calendrier.html">‹ Calendrier</a>
+  <a class="nav-menu-btn" href="index.html">☰ Menu</a>
+</div>
+
+<div class="hero" id="heroSection">
+  <div class="loading"><div class="spinner"></div></div>
+</div>
+
+<div class="content" id="detailContainer"></div>
+
+<script>
+const GROUPS = [
+  { letter:'A', matches:[
+    {id:'A1',date:'11 juin',home:'Mexique',away:'Afrique du Sud'},{id:'A2',date:'12 juin',home:'Corée du Sud',away:'Tchéquie'},
+    {id:'A3',date:'18 juin',home:'Tchéquie',away:'Afrique du Sud'},{id:'A4',date:'19 juin',home:'Mexique',away:'Corée du Sud'},
+    {id:'A5',date:'25 juin',home:'Tchéquie',away:'Mexique'},{id:'A6',date:'25 juin',home:'Afrique du Sud',away:'Corée du Sud'}]},
+  { letter:'B', matches:[
+    {id:'B1',date:'12 juin',home:'Canada',away:'Bosnie'},{id:'B2',date:'13 juin',home:'Qatar',away:'Suisse'},
+    {id:'B3',date:'18 juin',home:'Suisse',away:'Bosnie'},{id:'B4',date:'19 juin',home:'Canada',away:'Qatar'},
+    {id:'B5',date:'24 juin',home:'Suisse',away:'Canada'},{id:'B6',date:'24 juin',home:'Bosnie',away:'Qatar'}]},
+  { letter:'C', matches:[
+    {id:'C1',date:'14 juin',home:'Brésil',away:'Maroc'},{id:'C2',date:'14 juin',home:'Haïti',away:'Écosse'},
+    {id:'C3',date:'20 juin',home:'Écosse',away:'Maroc'},{id:'C4',date:'20 juin',home:'Brésil',away:'Haïti'},
+    {id:'C5',date:'25 juin',home:'Écosse',away:'Brésil'},{id:'C6',date:'25 juin',home:'Maroc',away:'Haïti'}]},
+  { letter:'D', matches:[
+    {id:'D1',date:'13 juin',home:'États-Unis',away:'Paraguay'},{id:'D2',date:'14 juin',home:'Australie',away:'Turquie'},
+    {id:'D3',date:'19 juin',home:'États-Unis',away:'Australie'},{id:'D4',date:'20 juin',home:'Turquie',away:'Paraguay'},
+    {id:'D5',date:'26 juin',home:'Paraguay',away:'Australie'},{id:'D6',date:'26 juin',home:'Turquie',away:'États-Unis'}]},
+  { letter:'E', matches:[
+    {id:'E1',date:'14 juin',home:'Allemagne',away:'Curaçao'},{id:'E2',date:'15 juin',home:"Côte d'Ivoire",away:'Équateur'},
+    {id:'E3',date:'20 juin',home:'Allemagne',away:"Côte d'Ivoire"},{id:'E4',date:'21 juin',home:'Équateur',away:'Curaçao'},
+    {id:'E5',date:'25 juin',home:'Curaçao',away:"Côte d'Ivoire"},{id:'E6',date:'25 juin',home:'Équateur',away:'Allemagne'}]},
+  { letter:'F', matches:[
+    {id:'F1',date:'14 juin',home:'Pays-Bas',away:'Japon'},{id:'F2',date:'15 juin',home:'Suède',away:'Tunisie'},
+    {id:'F3',date:'20 juin',home:'Pays-Bas',away:'Suède'},{id:'F4',date:'21 juin',home:'Tunisie',away:'Japon'},
+    {id:'F5',date:'26 juin',home:'Japon',away:'Suède'},{id:'F6',date:'26 juin',home:'Tunisie',away:'Pays-Bas'}]},
+  { letter:'G', matches:[
+    {id:'G1',date:'15 juin',home:'Belgique',away:'Égypte'},{id:'G2',date:'16 juin',home:'Iran',away:'Nouvelle-Zélande'},
+    {id:'G3',date:'21 juin',home:'Belgique',away:'Iran'},{id:'G4',date:'22 juin',home:'Nouvelle-Zélande',away:'Égypte'},
+    {id:'G5',date:'27 juin',home:'Égypte',away:'Iran'},{id:'G6',date:'27 juin',home:'Nouvelle-Zélande',away:'Belgique'}]},
+  { letter:'H', matches:[
+    {id:'H1',date:'15 juin',home:'Espagne',away:'Cap-Vert'},{id:'H2',date:'16 juin',home:'Uruguay',away:'Arabie Saoudite'},
+    {id:'H3',date:'21 juin',home:'Espagne',away:'Arabie Saoudite'},{id:'H4',date:'22 juin',home:'Uruguay',away:'Cap-Vert'},
+    {id:'H5',date:'27 juin',home:'Cap-Vert',away:'Arabie Saoudite'},{id:'H6',date:'27 juin',home:'Uruguay',away:'Espagne'}]},
+  { letter:'I', matches:[
+    {id:'I1',date:'16 juin',home:'France',away:'Sénégal'},{id:'I2',date:'17 juin',home:'Irak',away:'Norvège'},
+    {id:'I3',date:'22 juin',home:'France',away:'Irak'},{id:'I4',date:'23 juin',home:'Norvège',away:'Sénégal'},
+    {id:'I5',date:'26 juin',home:'Norvège',away:'France'},{id:'I6',date:'26 juin',home:'Sénégal',away:'Irak'}]},
+  { letter:'J', matches:[
+    {id:'J1',date:'17 juin',home:'Argentine',away:'Algérie'},{id:'J2',date:'17 juin',home:'Autriche',away:'Jordanie'},
+    {id:'J3',date:'22 juin',home:'Argentine',away:'Autriche'},{id:'J4',date:'23 juin',home:'Jordanie',away:'Algérie'},
+    {id:'J5',date:'28 juin',home:'Algérie',away:'Autriche'},{id:'J6',date:'28 juin',home:'Jordanie',away:'Argentine'}]},
+  { letter:'K', matches:[
+    {id:'K1',date:'17 juin',home:'Portugal',away:'RD Congo'},{id:'K2',date:'18 juin',home:'Ouzbékistan',away:'Colombie'},
+    {id:'K3',date:'23 juin',home:'Portugal',away:'Ouzbékistan'},{id:'K4',date:'24 juin',home:'Colombie',away:'RD Congo'},
+    {id:'K5',date:'28 juin',home:'Colombie',away:'Portugal'},{id:'K6',date:'28 juin',home:'RD Congo',away:'Ouzbékistan'}]},
+  { letter:'L', matches:[
+    {id:'L1',date:'17 juin',home:'Angleterre',away:'Croatie'},{id:'L2',date:'18 juin',home:'Ghana',away:'Panama'},
+    {id:'L3',date:'23 juin',home:'Angleterre',away:'Ghana'},{id:'L4',date:'24 juin',home:'Panama',away:'Croatie'},
+    {id:'L5',date:'27 juin',home:'Panama',away:'Angleterre'},{id:'L6',date:'27 juin',home:'Croatie',away:'Ghana'}]}
+];
+
+function findMatch(matchId) {
+  for (const g of GROUPS) {
+    for (const m of g.matches) {
+      if (m.id === matchId) return { ...m, group: g.letter };
+    }
+  }
+  return null;
+}
+
+const urlParams = new URLSearchParams(window.location.search);
+const matchId = urlParams.get('id');
+
+function renderDetail() {
+  const match = findMatch(matchId);
+  if (!match) {
+    document.getElementById('heroSection').innerHTML = '<p style="color:#e07070">Match introuvable</p>';
+    return;
+  }
+
+  const resultatsRaw = sessionStorage.getItem('cdm_resultats');
+  const pronosticsRaw = sessionStorage.getItem('cdm_pronostics');
+
+  if (!resultatsRaw || !pronosticsRaw) {
+    // Fallback: redirect to calendar to reload data
+    window.location.href = 'calendrier.html';
+    return;
+  }
+
+  const resultatsByMatch = JSON.parse(resultatsRaw);
+  const pronosticsData = JSON.parse(pronosticsRaw);
+  const reel = resultatsByMatch[matchId];
+  const isDone = reel && reel.home_score !== null && reel.home_score !== undefined;
+
+  // Hero
+  document.getElementById('heroSection').innerHTML = `
+    <div class="hero-group">Groupe ${match.group}</div>
+    <div class="hero-teams">${match.home} <span class="vs">vs</span> ${match.away}</div>
+    ${isDone
+      ? `<div class="hero-score">${reel.home_score} - ${reel.away_score}</div>`
+      : `<div class="hero-score pending">⏳ Match pas encore joué</div>`}
+    <div class="hero-date">${match.date}</div>
+  `;
+
+  if (!isDone) {
+    document.getElementById('detailContainer').innerHTML = '<div class="empty-msg">Ce match n\\'a pas encore été joué.<br>Reviens une fois le résultat saisi !</div>';
+    return;
+  }
+
+  // Build predictions list
+  const predictions = [];
+  let nb3 = 0, nb1 = 0, nb0 = 0, totalPts = 0;
+
+  pronosticsData.forEach(p => {
+    const prono = (p.pronos || {})[matchId];
+    if (!prono) return;
+
+    const pH = prono.home !== '' && prono.home !== null ? parseInt(prono.home) : null;
+    const pA = prono.away !== '' && prono.away !== null ? parseInt(prono.away) : null;
+    const scoreStr = (pH !== null && pA !== null && !isNaN(pH) && !isNaN(pA)) ? `${pH}-${pA}` : (prono.result || '?');
+
+    let pts = 0, cls = 'pts0';
+    if (pH !== null && pA !== null && !isNaN(pH) && !isNaN(pA) && pH === reel.home_score && pA === reel.away_score) {
+      pts = 3; cls = 'pts3'; nb3++;
+    } else if (prono.result && prono.result === reel.result) {
+      pts = 1; cls = 'pts1'; nb1++;
+    } else {
+      nb0++;
+    }
+    totalPts += pts;
+
+    predictions.push({ pseudo: p.pseudo, scoreStr, pts, cls });
+  });
+
+  predictions.sort((a, b) => b.pts - a.pts);
+
+  document.getElementById('detailContainer').innerHTML = `
+    <div class="summary-bar">
+      <div class="summary-item"><div class="summary-val" style="color:#d4af37">${nb3}</div><div class="summary-lbl">Score exact</div></div>
+      <div class="summary-item"><div class="summary-val" style="color:#2ea55a">${nb1}</div><div class="summary-lbl">Bon résultat</div></div>
+      <div class="summary-item"><div class="summary-val" style="color:#3a5a7a">${nb0}</div><div class="summary-lbl">Raté</div></div>
+      <div class="summary-item"><div class="summary-val">${totalPts}</div><div class="summary-lbl">Points distribués</div></div>
+    </div>
+
+    <div class="section-title">Pronostics des participants (${predictions.length})</div>
+    ${predictions.length === 0 ? '<div class="empty-msg">Aucun pronostic enregistré sur ce match.</div>' :
+      predictions.map(p => `
+        <div class="pred-row ${p.cls === 'pts3' ? 'win3' : p.cls === 'pts1' ? 'win1' : ''}">
+          <div class="pred-name">${p.pseudo}</div>
+          <div class="pred-score">${p.scoreStr}</div>
+          <div class="pred-pts ${p.cls}">+${p.pts}</div>
+        </div>
+      `).join('')
+    }
+  `;
+}
+
+renderDetail();
+</script>
+</body>
+</html>

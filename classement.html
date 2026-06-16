@@ -54,6 +54,8 @@
   .rank-breakdown { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
   .rank-total { font-size: 18px; font-weight: 900; color: #d4af37; }
   .rank-detail { font-size: 10px; color: #5a7a9a; }
+  .rank-accuracy { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; color: #d4af37; background: rgba(212,175,55,0.12); border-radius: 8px; padding: 1px 7px; margin-left: 6px; }
+  .podium-accuracy { font-size: 10px; font-weight: 700; color: #d4af37; margin-top: 1px; }
 
   /* PHASE BADGES */
   .phase-badge { display: inline-block; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-left: 6px; }
@@ -256,6 +258,7 @@ const GROUPS = [
     {id:'L5',home:'Panama',away:'Angleterre'},{id:'L6',home:'Croatie',away:'Ghana'}]}
 ];
 let allScores = [];
+let accuracyByEmail = {};
 
 function setPhase(p) {
   currentPhase = p;
@@ -284,7 +287,24 @@ async function loadClassement() {
     allResultats = {};
     resultatsData.forEach(r => { allResultats[r.match_id] = r; });
 
-
+    // Compute accuracy (% bons pronostics) per participant
+    accuracyByEmail = {};
+    pronosticsData.forEach(p => {
+      const pronos = p.pronos || {};
+      let nbJoues = 0, nbBons = 0;
+      Object.keys(pronos).forEach(matchId => {
+        const reel = allResultats[matchId];
+        if (!reel || reel.home_score === null || reel.home_score === undefined) return;
+        nbJoues++;
+        const prono = pronos[matchId];
+        const pH = prono.home !== '' && prono.home !== null ? parseInt(prono.home) : null;
+        const pA = prono.away !== '' && prono.away !== null ? parseInt(prono.away) : null;
+        const isExact = pH !== null && pA !== null && !isNaN(pH) && !isNaN(pA) && pH === reel.home_score && pA === reel.away_score;
+        const isGoodResult = prono.result && prono.result === reel.result;
+        if (isExact || isGoodResult) nbBons++;
+      });
+      accuracyByEmail[p.email] = nbJoues > 0 ? Math.round((nbBons / nbJoues) * 100) : 0;
+    });
 
     // Stats
     document.getElementById('statParticipants').textContent = allScores.length;
@@ -322,9 +342,10 @@ function renderRanking() {
   }
 
   let sorted = [...allScores];
-  if (currentPhase === '1') sorted.sort((a,b) => b.points_phase1 - a.points_phase1);
-  else if (currentPhase === '2') sorted.sort((a,b) => b.points_phase2 - a.points_phase2);
-  else sorted.sort((a,b) => b.total_points - a.total_points);
+  const acc = s => accuracyByEmail[s.email] || 0;
+  if (currentPhase === '1') sorted.sort((a,b) => b.points_phase1 - a.points_phase1 || acc(b) - acc(a));
+  else if (currentPhase === '2') sorted.sort((a,b) => b.points_phase2 - a.points_phase2 || acc(b) - acc(a));
+  else sorted.sort((a,b) => b.total_points - a.total_points || acc(b) - acc(a));
 
   const getScore = s => currentPhase === '1' ? s.points_phase1 : currentPhase === '2' ? s.points_phase2 : s.total_points;
   const getInitials = name => name.split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2);
@@ -342,6 +363,7 @@ function renderRanking() {
         <div class="podium-avatar">${getInitials(s.pseudo)}</div>
         <div class="podium-name">${s.pseudo}</div>
         <div class="podium-pts">${getScore(s)} pts</div>
+        <div class="podium-accuracy">🎯 ${acc(s)}%</div>
         <div class="podium-bar ${barClasses[i]}">${posLabels[i]}</div>
       </div>`;
   });
@@ -360,7 +382,7 @@ function renderRanking() {
         <div class="rank-pseudo">${s.pseudo}</div>
         <div class="rank-breakdown">
           <div class="rank-total">${pts} pts</div>
-          <div class="rank-detail">${s.points_phase1}pts P1 · ${s.points_phase2}pts P2</div>
+          <div class="rank-detail">${s.points_phase1}pts P1 · ${s.points_phase2}pts P2 <span class="rank-accuracy">🎯 ${acc(s)}%</span></div>
         </div>
         <div class="rank-chevron">›</div>
       </div>`;
