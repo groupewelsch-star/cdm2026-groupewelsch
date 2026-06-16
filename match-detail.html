@@ -121,27 +121,35 @@ function findMatch(matchId) {
   return null;
 }
 
+const SUPABASE_URL = 'https://fafqylzoegiuvzqjfeea.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZhZnF5bHpvZWdpdXZ6cWpmZWVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExNzQxMDQsImV4cCI6MjA5Njc1MDEwNH0.T3YxIsSMTyVoXvcM2jq5cPWBPGuUVKY8Ss4vvLyLzd8';
+
 const urlParams = new URLSearchParams(window.location.search);
 const matchId = urlParams.get('id');
 
-function renderDetail() {
+async function renderDetail() {
   const match = findMatch(matchId);
   if (!match) {
     document.getElementById('heroSection').innerHTML = '<p style="color:#e07070">Match introuvable</p>';
     return;
   }
 
-  const resultatsRaw = sessionStorage.getItem('cdm_resultats');
-  const pronosticsRaw = sessionStorage.getItem('cdm_pronostics');
+  let resultatsByMatch, pronosticsData;
 
-  if (!resultatsRaw || !pronosticsRaw) {
-    // Fallback: redirect to calendar to reload data
-    window.location.href = 'calendrier.html';
+  try {
+    const [resResultats, resPronostics] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/resultats`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+      fetch(`${SUPABASE_URL}/rest/v1/pronostics`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
+    ]);
+    const resultatsData = await resResultats.json();
+    pronosticsData = await resPronostics.json();
+    resultatsByMatch = {};
+    resultatsData.forEach(r => { resultatsByMatch[r.match_id] = r; });
+  } catch(e) {
+    document.getElementById('heroSection').innerHTML = '<p style="color:#e07070">Erreur de chargement. Réessaie.</p>';
     return;
   }
 
-  const resultatsByMatch = JSON.parse(resultatsRaw);
-  const pronosticsData = JSON.parse(pronosticsRaw);
   const reel = resultatsByMatch[matchId];
   const isDone = reel && reel.home_score !== null && reel.home_score !== undefined;
 
