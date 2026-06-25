@@ -40,6 +40,7 @@
 
   .match-chevron { font-size: 16px; color: #3a5a7a; flex-shrink: 0; }
 
+  .sticky-header { position: sticky; top: 0; z-index: 50; }
   .loading { text-align: center; padding: 40px; color: #5a7a9a; }
   .spinner { width: 32px; height: 32px; border: 3px solid #1e3356; border-top-color: #d4af37; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -47,14 +48,15 @@
 </head>
 <body>
 
-<div class="nav-bar">
-  <div class="nav-logo">🏆 CDM 2026</div>
-  <a class="nav-menu-btn" href="index.html">☰ Menu</a>
-</div>
-
-<div class="hero">
-  <div class="hero-brand">📅 Calendrier des matchs</div>
-  <div class="hero-sub">Scores réels · Points distribués au groupe</div>
+<div class="sticky-header">
+  <div class="nav-bar">
+    <div class="nav-logo">🏆 CDM 2026</div>
+    <a class="nav-menu-btn" href="index.html">☰ Menu</a>
+  </div>
+  <div class="hero">
+    <div class="hero-brand">📅 Calendrier des matchs</div>
+    <div class="hero-sub">Scores réels · Points distribués au groupe</div>
+  </div>
 </div>
 
 <div class="content" id="calendarContainer">
