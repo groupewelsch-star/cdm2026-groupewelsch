@@ -66,6 +66,17 @@
   .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
   .empty-state p { font-size: 14px; }
 
+  /* COLLAPSIBLE PHASES */
+  .phase-section { margin-bottom: 12px; }
+  .phase-section-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: #1a2f50; border: 1px solid #2a4a7a; border-radius: 10px; cursor: pointer; -webkit-tap-highlight-color: transparent; user-select: none; }
+  .phase-section-header.phase2 { background: linear-gradient(90deg, rgba(212,175,55,0.15), #1a2f50); border-color: #d4af37; }
+  .phase-section-title { font-size: 13px; font-weight: 700; color: #fff; }
+  .phase-section-pts { font-size: 12px; color: #8ba0bf; }
+  .phase-section-chevron { font-size: 14px; color: #5a7a9a; transition: transform 0.2s; }
+  .phase-section-chevron.open { transform: rotate(90deg); }
+  .phase-section-body { display: none; padding-top: 8px; }
+  .phase-section-body.open { display: block; }
+
   .loading { text-align: center; padding: 40px; color: #5a7a9a; }
   .spinner { width: 32px; height: 32px; border: 3px solid #1e3356; border-top-color: #d4af37; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -395,17 +406,66 @@ function renderRanking() {
   container.innerHTML = podiumHTML + listHTML;
 }
 
-function showDetail(email) {
+const MATCHES_P2 = [
+  {id:'R1_1', home:'Afrique du Sud', away:'Canada'},
+  {id:'R1_2', home:'Pays-Bas', away:'Maroc'},
+  {id:'R1_3', home:"Côte d'Ivoire", away:'Norvège'},
+  {id:'R1_4', home:'France', away:'Suède'},
+  {id:'R1_5', home:'Belgique', away:'Sénégal'},
+  {id:'R1_6', home:'Angleterre', away:'RD Congo'},
+  {id:'R1_7', home:'Mexique', away:'Équateur'},
+  {id:'R1_8', home:'États-Unis', away:'Bosnie'},
+  {id:'R1_9', home:'Espagne', away:'Autriche'},
+  {id:'R1_10', home:'Allemagne', away:'Paraguay'},
+  {id:'R1_11', home:'Suisse', away:'Algérie'},
+  {id:'R1_12', home:'Australie', away:'Égypte'},
+  {id:'R1_13', home:'Portugal', away:'Croatie'},
+  {id:'R1_14', home:'Brésil', away:'Japon'},
+  {id:'R1_15', home:'Colombie', away:'Ghana'},
+  {id:'R1_16', home:'Argentine', away:'Cap-Vert'},
+];
+
+function buildMatchHTML(prono, reel, home, away, stats) {
+  const pronoH = prono && prono.home !== '' && prono.home !== null ? prono.home : '?';
+  const pronoA = prono && prono.away !== '' && prono.away !== null ? prono.away : '?';
+  const pronoScore = pronoH !== '?' || pronoA !== '?' ? `${pronoH}-${pronoA}` : '—';
+  const pronoRes = prono ? (prono.result || '?') : '?';
+  let pts = 0, matchClass = 'pending', ptsClass = 'pending', ptsLabel = '⏳';
+  let reelScore = '—';
+  if (reel && reel.home_score !== null) {
+    reelScore = `${reel.home_score}-${reel.away_score}`;
+    const pH = parseInt(prono?.home), pA = parseInt(prono?.away);
+    if (!isNaN(pH) && !isNaN(pA) && pH === reel.home_score && pA === reel.away_score) {
+      pts = 3; matchClass = 'won3'; ptsClass = 'pts3'; ptsLabel = '+3'; stats.nb3++;
+    } else if (prono?.result === reel.result) {
+      pts = 1; matchClass = 'won1'; ptsClass = 'pts1'; ptsLabel = '+1'; stats.nb1++;
+    } else {
+      pts = 0; matchClass = 'lost'; ptsClass = 'pts0'; ptsLabel = '0'; stats.nb0++;
+    }
+  }
+  return `<div class="detail-match ${matchClass}">
+    <div class="detail-teams">${home} vs ${away}</div>
+    <div class="detail-prono">${pronoScore} [${pronoRes}]</div>
+    <div class="detail-reel">${reelScore}</div>
+    <div class="detail-pts ${ptsClass}">${ptsLabel}</div>
+  </div>`;
+}
+
+async function showDetail(email) {
   const participant = allPronostics[email];
-  // Try finding scoreData by email first, then by pseudo fallback
   let scoreData = allScores.find(s => s.email === email);
-  if (!scoreData && participant) {
-    scoreData = allScores.find(s => s.pseudo === participant.pseudo);
-  }
-  if (!participant || !scoreData) {
-    alert('Pronostics non disponibles pour ce participant.');
-    return;
-  }
+  if (!scoreData && participant) scoreData = allScores.find(s => s.pseudo === participant.pseudo);
+  if (!participant || !scoreData) { alert('Pronostics non disponibles pour ce participant.'); return; }
+
+  // Load Phase 2 pronos
+  let phase2Pronos = {};
+  try {
+    const res2 = await fetch(`${SUPABASE_URL}/rest/v1/pronostics?email=eq.${encodeURIComponent(email)}&phase=eq.2&select=pronos`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    const d2 = await res2.json();
+    if (d2.length) phase2Pronos = d2[0].pronos || {};
+  } catch(e) {}
 
   const initials = scoreData.pseudo.split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2);
   document.getElementById('detailAvatar').textContent = initials;
@@ -413,62 +473,76 @@ function showDetail(email) {
   document.getElementById('detailScore').textContent = `${scoreData.total_points} pts total · ${scoreData.points_phase1} pts P1 · ${scoreData.points_phase2} pts P2`;
 
   const pronos = participant.pronos || {};
-  let bodyHTML = '';
-  let totalPts = 0, nb3 = 0, nb1 = 0, nb0 = 0;
+  const stats = { nb3: 0, nb1: 0, nb0: 0 };
 
+  // === PHASE 2 (ouvert par défaut) ===
+  let p2HTML = '';
+  MATCHES_P2.forEach(m => {
+    const prono = phase2Pronos[m.id];
+    const reel = allResultats[m.id];
+    if (!prono && !reel) return;
+    p2HTML += buildMatchHTML(prono, reel, m.home, m.away, stats);
+  });
+
+  // === PHASE 1 (replié par défaut) ===
+  let p1HTML = '';
   GROUPS.forEach(g => {
     let groupHTML = '';
     g.matches.forEach(m => {
       const prono = pronos[m.id];
       const reel = allResultats[m.id];
       if (!prono) return;
-
-      const pronoH = prono.home !== '' && prono.home !== null ? prono.home : '?';
-      const pronoA = prono.away !== '' && prono.away !== null ? prono.away : '?';
-      const pronoScore = pronoH !== '?' || pronoA !== '?' ? `${pronoH}-${pronoA}` : '—';
-      const pronoRes = prono.result || '?';
-
-      let pts = 0, matchClass = 'pending', ptsClass = 'pending', ptsLabel = '⏳';
-      let reelScore = '—';
-
-      if (reel && reel.home_score !== null) {
-        reelScore = `${reel.home_score}-${reel.away_score}`;
-        const pH = parseInt(prono.home), pA = parseInt(prono.away);
-        if (!isNaN(pH) && !isNaN(pA) && pH === reel.home_score && pA === reel.away_score) {
-          pts = 3; matchClass = 'won3'; ptsClass = 'pts3'; ptsLabel = '+3'; nb3++;
-        } else if (prono.result === reel.result) {
-          pts = 1; matchClass = 'won1'; ptsClass = 'pts1'; ptsLabel = '+1'; nb1++;
-        } else {
-          pts = 0; matchClass = 'lost'; ptsClass = 'pts0'; ptsLabel = '0'; nb0++;
-        }
-        totalPts += pts;
-      }
-
-      groupHTML += `<div class="detail-match ${matchClass}">
-        <div class="detail-teams">${m.home} vs ${m.away}</div>
-        <div class="detail-prono">${pronoScore} [${pronoRes}]</div>
-        <div class="detail-reel">${reelScore}</div>
-        <div class="detail-pts ${ptsClass}">${ptsLabel}</div>
-      </div>`;
+      groupHTML += buildMatchHTML(prono, reel, m.home, m.away, stats);
     });
-
     if (groupHTML) {
-      bodyHTML += `<div class="detail-group">
+      p1HTML += `<div class="detail-group">
         <div class="detail-group-title"><div class="detail-group-letter">${g.letter}</div>Groupe ${g.letter}</div>
         ${groupHTML}
       </div>`;
     }
   });
 
+  let bodyHTML = '';
+  // Phase 2 section (open)
+  if (p2HTML) {
+    bodyHTML += `<div class="phase-section">
+      <div class="phase-section-header phase2" onclick="toggleSection('p2section')">
+        <div><div class="phase-section-title">⚡ Phase finale · 16es</div><div class="phase-section-pts">${scoreData.points_phase2} pts</div></div>
+        <span class="phase-section-chevron open" id="chevron_p2section">›</span>
+      </div>
+      <div class="phase-section-body open" id="p2section">${p2HTML}</div>
+    </div>`;
+  } else {
+    bodyHTML += `<div style="padding:10px 0;font-size:12px;color:#5a7a9a">⏳ Aucun pronostic Phase 2 enregistré</div>`;
+  }
+
+  // Phase 1 section (collapsed by default)
+  if (p1HTML) {
+    bodyHTML += `<div class="phase-section">
+      <div class="phase-section-header" onclick="toggleSection('p1section')">
+        <div><div class="phase-section-title">⚽ Phase de poules</div><div class="phase-section-pts">${scoreData.points_phase1} pts</div></div>
+        <span class="phase-section-chevron" id="chevron_p1section">›</span>
+      </div>
+      <div class="phase-section-body" id="p1section">${p1HTML}</div>
+    </div>`;
+  }
+
   document.getElementById('detailBody').innerHTML = bodyHTML || '<p style="color:#5a7a9a;font-size:13px;padding:10px">Aucun pronostic trouvé.</p>';
   document.getElementById('detailSummary').innerHTML = `
-    <div class="detail-sum-item"><div class="detail-sum-val" style="color:#d4af37">${nb3}</div><div class="detail-sum-lbl">Scores exacts</div></div>
-    <div class="detail-sum-item"><div class="detail-sum-val" style="color:#2ea55a">${nb1}</div><div class="detail-sum-lbl">Bons résultats</div></div>
-    <div class="detail-sum-item"><div class="detail-sum-val" style="color:#3a5a7a">${nb0}</div><div class="detail-sum-lbl">Ratés</div></div>
+    <div class="detail-sum-item"><div class="detail-sum-val" style="color:#d4af37">${stats.nb3}</div><div class="detail-sum-lbl">Scores exacts</div></div>
+    <div class="detail-sum-item"><div class="detail-sum-val" style="color:#2ea55a">${stats.nb1}</div><div class="detail-sum-lbl">Bons résultats</div></div>
+    <div class="detail-sum-item"><div class="detail-sum-val" style="color:#3a5a7a">${stats.nb0}</div><div class="detail-sum-lbl">Ratés</div></div>
     <div class="detail-sum-item"><div class="detail-sum-val">${scoreData.total_points}</div><div class="detail-sum-lbl">Points total</div></div>
   `;
 
   document.getElementById('detailOverlay').classList.add('open');
+}
+
+function toggleSection(id) {
+  const body = document.getElementById(id);
+  const chevron = document.getElementById('chevron_' + id);
+  body.classList.toggle('open');
+  chevron.classList.toggle('open');
 }
 
 function closeDetail() {
