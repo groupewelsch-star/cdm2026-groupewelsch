@@ -204,12 +204,17 @@ async function loadCalendar() {
   const container = document.getElementById('calendarContainer');
 
   try {
-    const [resResultats, resPronostics] = await Promise.all([
-      fetch(`${SUPABASE_URL}/rest/v1/resultats`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
-      fetch(`${SUPABASE_URL}/rest/v1/pronostics`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
+    const _h = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` };
+    const [resResultats, resP1, resP2, resScores] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/resultats`, { headers: _h }),
+      fetch(`${SUPABASE_URL}/rest/v1/pronostics?phase=eq.1`, { headers: _h }),
+      fetch(`${SUPABASE_URL}/rest/v1/pronostics?phase=eq.2`, { headers: _h }),
+      fetch(`${SUPABASE_URL}/rest/v1/scores?select=pseudo,email`, { headers: _h })
     ]);
     const resultatsData = await resResultats.json();
-    const pronosticsData = await resPronostics.json();
+    const pronosticsData = await resP1.json();
+    const pronosticsData2 = await resP2.json();
+    const scoresData = await resScores.json();
 
     const resultatsByMatch = {};
     resultatsData.forEach(r => { resultatsByMatch[r.match_id] = r; });
