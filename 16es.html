@@ -351,10 +351,12 @@ function updateProgress() {
 async function submitAll() {
   if (!currentEmail) { showToast('⚠️ Vérifie ton identifiant d\'abord', 'error'); return; }
 
-  // Build pronos object (only unlocked matches)
-  const pronos = {};
+  // Build pronos object — merge with existing to preserve locked match pronostics
+  const pronos = Object.assign({}, existingPhase2Pronos || {});
   Object.keys(state).forEach(id => {
-    if (!state[id].locked) pronos[id] = { home: state[id].home, away: state[id].away, result: state[id].result };
+    if (!state[id].locked) {
+      pronos[id] = { home: state[id].home, away: state[id].away, result: state[id].result };
+    }
   });
 
   const filled = Object.values(pronos).filter(p => p.result).length;
