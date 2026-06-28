@@ -112,7 +112,30 @@ const GROUPS = [
     {id:'L5',date:'27 juin',home:'Panama',away:'Angleterre'},{id:'L6',date:'27 juin',home:'Croatie',away:'Ghana'}]}
 ];
 
+const MATCHES_P2 = [
+  {id:'R1_1',date:'29 juin',home:'Afrique du Sud',away:'Canada',group:'16es'},
+  {id:'R1_2',date:'30 juin',home:'Pays-Bas',away:'Maroc',group:'16es'},
+  {id:'R1_3',date:'30 juin',home:"Côte d'Ivoire",away:'Norvège',group:'16es'},
+  {id:'R1_4',date:'30 juin',home:'France',away:'Suède',group:'16es'},
+  {id:'R1_5',date:'1 juil.',home:'Belgique',away:'Sénégal',group:'16es'},
+  {id:'R1_6',date:'1 juil.',home:'Angleterre',away:'RD Congo',group:'16es'},
+  {id:'R1_7',date:'2 juil.',home:'Mexique',away:'Équateur',group:'16es'},
+  {id:'R1_8',date:'2 juil.',home:'États-Unis',away:'Bosnie',group:'16es'},
+  {id:'R1_9',date:'2 juil.',home:'Espagne',away:'Autriche',group:'16es'},
+  {id:'R1_10',date:'1 juil.',home:'Allemagne',away:'Paraguay',group:'16es'},
+  {id:'R1_11',date:'3 juil.',home:'Suisse',away:'Algérie',group:'16es'},
+  {id:'R1_12',date:'3 juil.',home:'Australie',away:'Égypte',group:'16es'},
+  {id:'R1_13',date:'3 juil.',home:'Portugal',away:'Croatie',group:'16es'},
+  {id:'R1_14',date:'1 juil.',home:'Brésil',away:'Japon',group:'16es'},
+  {id:'R1_15',date:'4 juil.',home:'Colombie',away:'Ghana',group:'16es'},
+  {id:'R1_16',date:'4 juil.',home:'Argentine',away:'Cap-Vert',group:'16es'},
+];
+
 function findMatch(matchId) {
+  // Check Phase 2 first
+  const p2 = MATCHES_P2.find(m => m.id === matchId);
+  if (p2) return p2;
+  // Then Phase 1
   for (const g of GROUPS) {
     for (const m of g.matches) {
       if (m.id === matchId) return { ...m, group: g.letter };
@@ -137,12 +160,17 @@ async function renderDetail() {
   let resultatsByMatch, pronosticsData;
 
   try {
-    const [resResultats, resPronostics] = await Promise.all([
+    const isPhase2 = matchId.startsWith('R');
+    const [resResultats, resPronostics, resScores] = await Promise.all([
       fetch(`${SUPABASE_URL}/rest/v1/resultats`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
-      fetch(`${SUPABASE_URL}/rest/v1/pronostics`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
+      fetch(`${SUPABASE_URL}/rest/v1/pronostics?phase=eq.${isPhase2 ? 2 : 1}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+      fetch(`${SUPABASE_URL}/rest/v1/scores?select=pseudo,email`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
     ]);
     const resultatsData = await resResultats.json();
     pronosticsData = await resPronostics.json();
+    const scoresData = await resScores.json();
+    // Store all participants for "who hasn't pronosticated" section
+    window._allParticipants = scoresData;
     resultatsByMatch = {};
     resultatsData.forEach(r => { resultatsByMatch[r.match_id] = r; });
   } catch(e) {
@@ -195,6 +223,21 @@ async function renderDetail() {
 
   predictions.sort((a, b) => b.pts - a.pts);
 
+  // Build list of who hasn't pronosticated
+  const allParticipants = window._allParticipants || [];
+  const pronoEmails = new Set(pronosticsData.filter(p => (p.pronos||{})[matchId]).map(p => p.email));
+  const missing = allParticipants.filter(s => !pronoEmails.has(s.email));
+  const initials = name => name.split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2);
+
+  const missingHTML = missing.length > 0 ? `
+    <div class="section-title" style="color:#e07070;margin-top:20px">❌ N'ont pas encore pronostiqué (${missing.length})</div>
+    ${missing.map(p => `
+      <div class="pred-row" style="opacity:0.5;border-color:#1e3356">
+        <div style="width:28px;height:28px;border-radius:50%;background:#1a2f50;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#3a5a7a;flex-shrink:0">${initials(p.pseudo)}</div>
+        <div class="pred-name" style="color:#5a7a9a">${p.pseudo}</div>
+      </div>`).join('')}
+  ` : '';
+
   document.getElementById('detailContainer').innerHTML = `
     <div class="summary-bar">
       <div class="summary-item"><div class="summary-val" style="color:#d4af37">${nb3}</div><div class="summary-lbl">Score exact</div></div>
@@ -203,7 +246,7 @@ async function renderDetail() {
       <div class="summary-item"><div class="summary-val">${totalPts}</div><div class="summary-lbl">Points distribués</div></div>
     </div>
 
-    <div class="section-title">Pronostics des participants (${predictions.length})</div>
+    <div class="section-title">✅ Ont pronostiqué (${predictions.length}/${allParticipants.length})</div>
     ${predictions.length === 0 ? '<div class="empty-msg">Aucun pronostic enregistré sur ce match.</div>' :
       predictions.map(p => `
         <div class="pred-row ${p.cls === 'pts3' ? 'win3' : p.cls === 'pts1' ? 'win1' : ''}">
@@ -213,6 +256,7 @@ async function renderDetail() {
         </div>
       `).join('')
     }
+    ${missingHTML}
   `;
 }
 
