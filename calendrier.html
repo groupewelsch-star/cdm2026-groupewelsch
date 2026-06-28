@@ -318,10 +318,10 @@ async function loadCalendar() {
             <div class="match-teams">${m.home} <span class="vs">vs</span> ${m.away}</div>
             ${partHTML}
           </div>
-          <div class="match-score-zone" onclick="showParticipation('${m.id}','${m.home} vs ${m.away}',${phase})">
+          <div class="match-score-zone" onclick="showParticipation('${m.id}','${m.home} vs ${m.away}',${isP2match ? 2 : 1})">
             ${scoreHTML}
           </div>
-          <div class="match-chevron" onclick="showParticipation('${m.id}','${m.home} vs ${m.away}',${phase})">›</div>
+          <div class="match-chevron" onclick="showParticipation('${m.id}','${m.home} vs ${m.away}',${isP2match ? 2 : 1})">›</div>
         </div>`;
       });
       if (currentDate) phaseHTML += '</div>';
