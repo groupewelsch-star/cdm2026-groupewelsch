@@ -132,16 +132,26 @@
     </div>
 
     <!-- PARTICIPANTS -->
-    <div class="section-title">Participants inscrits</div>
-    <div class="participants-card">
-      <div id="participantsList"><p style="color:#5a7a9a;font-size:13px">Chargement...</p></div>
+    <div class="phase-toggle" onclick="toggleSection('participantsBody','chevParticipants')">
+      <div><div class="phase-toggle-title">👥 Participants inscrits</div><div class="phase-toggle-sub">Classement &amp; points</div></div>
+      <span class="phase-toggle-chevron" id="chevParticipants">›</span>
+    </div>
+    <div class="phase-body" id="participantsBody">
+      <div class="participants-card">
+        <div id="participantsList"><p style="color:#5a7a9a;font-size:13px">Chargement...</p></div>
+      </div>
     </div>
 
     <!-- RÉCAP PRONOSTICS -->
-    <div class="section-title">Récapitulatif pronostics</div>
-    <div class="participants-card">
-      <p style="font-size:12px;color:#5a7a9a;margin-bottom:12px">Clique sur un participant pour voir et copier ses pronostics complets.</p>
-      <div id="recapList"><p style="color:#5a7a9a;font-size:13px">Chargement...</p></div>
+    <div class="phase-toggle" onclick="toggleSection('recapBody','chevRecap')">
+      <div><div class="phase-toggle-title">📋 Récapitulatif pronostics</div><div class="phase-toggle-sub">Voir les pronostics par participant</div></div>
+      <span class="phase-toggle-chevron" id="chevRecap">›</span>
+    </div>
+    <div class="phase-body" id="recapBody">
+      <div class="participants-card">
+        <p style="font-size:12px;color:#5a7a9a;margin-bottom:12px">Clique sur un participant pour voir et copier ses pronostics complets.</p>
+        <div id="recapList"><p style="color:#5a7a9a;font-size:13px">Chargement...</p></div>
+      </div>
     </div>
 
     <!-- SAISIE MANUELLE RÉSULTATS -->
@@ -534,6 +544,14 @@ async function recalculerTousLesPoints() {
   await loadParticipants();
 }
 
+
+function toggleSection(bodyId, chevId) {
+  const body = document.getElementById(bodyId);
+  const chev = document.getElementById(chevId);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  if (chev) chev.classList.toggle('open', !isOpen);
+}
 function showToast(msg, type = 'success') {
   const t = document.getElementById('toast');
   t.textContent = msg;
