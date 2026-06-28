@@ -128,7 +128,8 @@
       <h2>🤖 Mise à jour automatique des scores</h2>
       <p>Récupère les résultats des matchs joués et recalcule tous les points automatiquement.</p>
       <button class="btn-api" onclick="fetchResultats()">🔄 Récupérer résultats CDM</button>
-      <button class="btn-recalc" onclick="recalculerTousLesPoints()">⚡ Recalculer tous les points</button>
+      <button class="btn-recalc" onclick="recalculerTousLesPoints()">⚡ Recalculer P2</button>
+      <button class="btn-recalc" style="background:linear-gradient(135deg,#e05a5a,#b83a3a);margin-top:8px" onclick="recalculComplet()">🔁 Recalcul complet P1+P2</button>
     </div>
 
     <!-- PARTICIPANTS -->
@@ -550,6 +551,64 @@ async function recalculerTousLesPoints() {
   await loadParticipants();
 }
 
+
+async function recalculComplet() {
+  if (!confirm('Recalcul complet P1+P2 pour tous les participants. Continuer ?')) return;
+  showToast('🔁 Recalcul complet en cours...');
+
+  // Charger pronostics P1, P2, résultats et scores existants
+  const [resP1, resP2, resResultats, resScores] = await Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/pronostics?phase=eq.1`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+    fetch(`${SUPABASE_URL}/rest/v1/pronostics?phase=eq.2`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+    fetch(`${SUPABASE_URL}/rest/v1/resultats`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+    fetch(`${SUPABASE_URL}/rest/v1/scores`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
+  ]);
+  const p1Data = await resP1.json();
+  const p2Data = await resP2.json();
+  const resultatsData = await resResultats.json();
+  const scoresData = await resScores.json();
+
+  // Construire un index résultats par match_id
+  const resByMatch = {};
+  resultatsData.forEach(r => { resByMatch[r.match_id] = r; });
+
+  // Index pronostics P2 par email
+  const p2ByEmail = {};
+  p2Data.forEach(p => { p2ByEmail[p.email] = p; });
+
+  function calcPoints(pronos, phase) {
+    let pts = 0;
+    for (const [matchId, prono] of Object.entries(pronos || {})) {
+      const reel = resByMatch[matchId];
+      if (!reel || reel.home_score === null || reel.home_score === undefined) continue;
+      if ((reel.phase || 1) !== phase) continue;
+      const reelResult = reel.home_score > reel.away_score ? '1' : reel.away_score > reel.home_score ? '2' : 'N';
+      const pronoHome = prono.home !== '' && prono.home !== null ? parseInt(prono.home) : null;
+      const pronoAway = prono.away !== '' && prono.away !== null ? parseInt(prono.away) : null;
+      if (pronoHome !== null && pronoAway !== null && !isNaN(pronoHome) && !isNaN(pronoAway) && pronoHome === reel.home_score && pronoAway === reel.away_score) {
+        pts += 3;
+      } else if (prono.result && prono.result === reelResult) {
+        pts += 1;
+      }
+    }
+    return pts;
+  }
+
+  for (const s of scoresData) {
+    const p1entry = p1Data.find(p => p.email === s.email);
+    const p2entry = p2ByEmail[s.email];
+    const pts1 = calcPoints(p1entry ? p1entry.pronos : {}, 1);
+    const pts2 = calcPoints(p2entry ? p2entry.pronos : {}, 2);
+    await fetch(`${SUPABASE_URL}/rest/v1/scores?email=eq.${encodeURIComponent(s.email)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ points_phase1: pts1, points_phase2: pts2, total_points: pts1 + pts2, last_updated: new Date().toISOString() })
+    });
+  }
+
+  showToast('✅ Recalcul complet terminé !');
+  await loadParticipants();
+}
 
 function toggleSection(bodyId, chevId) {
   const body = document.getElementById(bodyId);
