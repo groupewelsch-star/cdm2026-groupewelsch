@@ -263,8 +263,11 @@ async function loadCalendar() {
       return phaseHTML;
     }
 
+    // Phase 1 = groupes A-L (from matchList)
+    // Phase 2 = 16es (from MATCHES_P2 directly, always shown even without scores)
+    const p2MatchesSorted = [...MATCHES_P2].sort((a,b) => DATE_ORDER_P2.indexOf(a.date) - DATE_ORDER_P2.indexOf(b.date));
     const p1HTML = buildPhaseHTML(p1Matches);
-    const p2HTML = buildPhaseHTML(p2Matches);
+    const p2HTML = buildPhaseHTML(p2MatchesSorted);
 
     container.innerHTML = `
       <div class="phase-header active" onclick="togglePhase('p2')">
