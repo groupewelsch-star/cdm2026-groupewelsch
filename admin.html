@@ -58,6 +58,14 @@
   .delete-match-btn { background: #3a1a1a; border: 1px solid #8b3030; color: #e07070; border-radius: 6px; font-size: 11px; font-weight: 700; padding: 6px 10px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .delete-match-btn:active { opacity: 0.8; }
   .match-status { font-size: 10px; padding: 3px 8px; border-radius: 4px; flex-shrink: 0; }
+  .phase-toggle { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #1a2f50; border: 1px solid #2a4a7a; border-radius: 12px; cursor: pointer; margin-bottom: 12px; -webkit-tap-highlight-color: transparent; user-select: none; }
+  .phase-toggle.active { background: linear-gradient(90deg, rgba(212,175,55,0.15), #1a2f50); border-color: #d4af37; }
+  .phase-toggle-title { font-size: 14px; font-weight: 700; color: #fff; }
+  .phase-toggle-sub { font-size: 11px; color: #8ba0bf; margin-top: 2px; }
+  .phase-toggle-chevron { font-size: 16px; color: #5a7a9a; transition: transform 0.2s; }
+  .phase-toggle-chevron.open { transform: rotate(90deg); }
+  .phase-body { display: none; }
+  .phase-body.open { display: block; }
   .match-status.done { background: rgba(46,165,90,0.2); color: #7fdc9f; border: 1px solid rgba(46,165,90,0.3); }
   .match-status.pending { background: rgba(90,122,154,0.2); color: #5a7a9a; border: 1px solid rgba(90,122,154,0.3); }
 
@@ -162,6 +170,25 @@
 const SUPABASE_URL = 'https://fafqylzoegiuvzqjfeea.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZhZnF5bHpvZWdpdXZ6cWpmZWVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExNzQxMDQsImV4cCI6MjA5Njc1MDEwNH0.T3YxIsSMTyVoXvcM2jq5cPWBPGuUVKY8Ss4vvLyLzd8';
 const ADMIN_PWD = 'Welsch2026!';
+
+const MATCHES_P2 = [
+  {id:'R1_1',  date:'28 juin',  home:'🇿🇦 Afrique du Sud', away:'🇨🇦 Canada',      phase:2},
+  {id:'R1_14', date:'29 juin',  home:'🇧🇷 Brésil',         away:'🇯🇵 Japon',        phase:2},
+  {id:'R1_10', date:'29 juin',  home:'🇩🇪 Allemagne',      away:'🇵🇾 Paraguay',     phase:2},
+  {id:'R1_2',  date:'30 juin',  home:'🇳🇱 Pays-Bas',       away:'🇲🇦 Maroc',        phase:2},
+  {id:'R1_3',  date:'30 juin',  home:"🇨🇮 Côte d'Ivoire",  away:'🇳🇴 Norvège',      phase:2},
+  {id:'R1_4',  date:'30 juin',  home:'🇫🇷 France',         away:'🇸🇪 Suède',        phase:2},
+  {id:'R1_7',  date:'1 juil.', home:'🇲🇽 Mexique',        away:'🇪🇨 Équateur',     phase:2},
+  {id:'R1_6',  date:'1 juil.', home:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Angleterre',    away:'🇨🇩 RD Congo',    phase:2},
+  {id:'R1_5',  date:'1 juil.', home:'🇧🇪 Belgique',       away:'🇸🇳 Sénégal',      phase:2},
+  {id:'R1_8',  date:'2 juil.', home:'🇺🇸 États-Unis',     away:'🇧🇦 Bosnie',       phase:2},
+  {id:'R1_9',  date:'2 juil.', home:'🇪🇸 Espagne',        away:'🇦🇹 Autriche',     phase:2},
+  {id:'R1_13', date:'3 juil.', home:'🇵🇹 Portugal',       away:'🇭🇷 Croatie',      phase:2},
+  {id:'R1_11', date:'3 juil.', home:'🇨🇭 Suisse',         away:'🇩🇿 Algérie',      phase:2},
+  {id:'R1_12', date:'3 juil.', home:'🇦🇺 Australie',      away:'🇪🇬 Égypte',       phase:2},
+  {id:'R1_16', date:'4 juil.', home:'🇦🇷 Argentine',      away:'🇨🇻 Cap-Vert',     phase:2},
+  {id:'R1_15', date:'4 juil.', home:'🇨🇴 Colombie',       away:'🇬🇭 Ghana',        phase:2},
+];
 
 const GROUPS = [
   { letter: 'A', teams: ['🇲🇽 Mexique', '🇰🇷 Corée du Sud', '🇿🇦 Afrique du Sud', '🇨🇿 Tchéquie'], matches: [
