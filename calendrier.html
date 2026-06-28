@@ -298,9 +298,11 @@ async function loadCalendar() {
         // Count participants who pronosticated this match
         const phase = m.id.startsWith('R') ? 2 : 1;
         let nbPronos = 0;
-        pronosticsData.forEach(p => {
-          if (p.phase !== phase) return;
-          if ((p.pronos || {})[m.id]) nbPronos++;
+        // For phase 2, count from allPronostics2, for phase 1 from pronosticsData
+        const pronosToCheck = phase === 2 ? (window._allPronostics2 || []) : pronosticsData;
+        pronosToCheck.forEach(p => {
+          const prono = (p.pronos || {})[m.id];
+          if (prono && prono.result) nbPronos++;
         });
         const totalParticipants = window._allScores ? window._allScores.length : '?';
         const partClass = nbPronos < totalParticipants ? 'warn' : '';
@@ -357,7 +359,7 @@ function goToMatch(matchId) {
 }
 
 function showParticipation(matchId, matchTitle, phase) {
-  const allPronostics = window._allPronostics || [];
+  const allPronostics = phase === 2 ? (window._allPronostics2 || []) : (window._allPronostics || []);
   const allScores = window._allScores || [];
   const reel = (window._allResultats || {})[matchId];
 
