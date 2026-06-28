@@ -191,10 +191,7 @@ async function renderDetail() {
     <div class="hero-date">${match.date}</div>
   `;
 
-  if (!isDone) {
-    document.getElementById('detailContainer').innerHTML = '<div class="empty-msg">Ce match n\'a pas encore été joué.<br>Reviens une fois le résultat saisi !</div>';
-    return;
-  }
+  // Continue even if match not played - show pronostics anyway
 
   // Build predictions list
   const predictions = [];
@@ -202,23 +199,25 @@ async function renderDetail() {
 
   pronosticsData.forEach(p => {
     const prono = (p.pronos || {})[matchId];
-    if (!prono) return;
+    if (!prono || !prono.result) return;
 
     const pH = prono.home !== '' && prono.home !== null ? parseInt(prono.home) : null;
     const pA = prono.away !== '' && prono.away !== null ? parseInt(prono.away) : null;
     const scoreStr = (pH !== null && pA !== null && !isNaN(pH) && !isNaN(pA)) ? `${pH}-${pA}` : (prono.result || '?');
 
     let pts = 0, cls = 'pts0';
-    if (pH !== null && pA !== null && !isNaN(pH) && !isNaN(pA) && pH === reel.home_score && pA === reel.away_score) {
-      pts = 3; cls = 'pts3'; nb3++;
-    } else if (prono.result && prono.result === reel.result) {
-      pts = 1; cls = 'pts1'; nb1++;
-    } else {
-      nb0++;
+    if (isDone) {
+      if (pH !== null && pA !== null && !isNaN(pH) && !isNaN(pA) && pH === reel.home_score && pA === reel.away_score) {
+        pts = 3; cls = 'pts3'; nb3++;
+      } else if (prono.result && prono.result === reel.result) {
+        pts = 1; cls = 'pts1'; nb1++;
+      } else {
+        nb0++;
+      }
+      totalPts += pts;
     }
-    totalPts += pts;
 
-    predictions.push({ pseudo: p.pseudo, scoreStr, pts, cls });
+    predictions.push({ pseudo: p.pseudo, scoreStr, pts, cls, pending: !isDone });
   });
 
   predictions.sort((a, b) => b.pts - a.pts);
@@ -239,12 +238,12 @@ async function renderDetail() {
   ` : '';
 
   document.getElementById('detailContainer').innerHTML = `
-    <div class="summary-bar">
+    ${isDone ? `<div class="summary-bar">
       <div class="summary-item"><div class="summary-val" style="color:#d4af37">${nb3}</div><div class="summary-lbl">Score exact</div></div>
       <div class="summary-item"><div class="summary-val" style="color:#2ea55a">${nb1}</div><div class="summary-lbl">Bon résultat</div></div>
       <div class="summary-item"><div class="summary-val" style="color:#3a5a7a">${nb0}</div><div class="summary-lbl">Raté</div></div>
       <div class="summary-item"><div class="summary-val">${totalPts}</div><div class="summary-lbl">Points distribués</div></div>
-    </div>
+    </div>` : `<div style="text-align:center;padding:12px;font-size:13px;color:#5a7a9a;background:#0f1e35;border-bottom:1px solid #1e3356">⏳ Match pas encore joué · Les points seront calculés après</div>`}
 
     <div class="section-title">✅ Ont pronostiqué (${predictions.length}/${allParticipants.length})</div>
     ${predictions.length === 0 ? '<div class="empty-msg">Aucun pronostic enregistré sur ce match.</div>' :
@@ -252,7 +251,7 @@ async function renderDetail() {
         <div class="pred-row ${p.cls === 'pts3' ? 'win3' : p.cls === 'pts1' ? 'win1' : ''}">
           <div class="pred-name">${p.pseudo}</div>
           <div class="pred-score">${p.scoreStr}</div>
-          <div class="pred-pts ${p.cls}">+${p.pts}</div>
+          <div class="pred-pts ${p.pending ? 'pending' : p.cls}">${p.pending ? '⏳' : '+'+p.pts}</div>
         </div>
       `).join('')
     }
