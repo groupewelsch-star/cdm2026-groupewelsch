@@ -372,7 +372,7 @@ function showParticipation(matchId, matchTitle, phase) {
   const withoutProno = [];
 
   allScores.forEach(s => {
-    const pData = allPronostics.find(p => p.email === s.email && p.phase === phase);
+    const pData = allPronostics.find(p => p.email === s.email);
     const prono = pData ? (pData.pronos || {})[matchId] : null;
     if (prono && prono.result) {
       const h = prono.home !== '' ? prono.home : '?';
