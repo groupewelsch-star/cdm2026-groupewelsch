@@ -365,15 +365,15 @@ async function submitAll() {
   document.getElementById('loadingOverlay').classList.add('open');
 
   try {
-    // Upsert Phase 2 pronostics
-    const method = existingPhase2Pronos ? 'PATCH' : 'POST';
-    const url = existingPhase2Pronos
-      ? `${SUPABASE_URL}/rest/v1/pronostics?email=eq.${encodeURIComponent(currentEmail)}&phase=eq.2`
-      : `${SUPABASE_URL}/rest/v1/pronostics`;
-
-    const res = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' },
+    // Upsert — insère ou met à jour selon email+phase
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/pronostics`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Prefer': 'resolution=merge-duplicates,return=minimal'
+      },
       body: JSON.stringify({ email: currentEmail, pseudo: currentPseudo, phase: 2, pronos })
     });
 
