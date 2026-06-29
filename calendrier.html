@@ -286,12 +286,13 @@ async function loadCalendar() {
         const isDone = reel && reel.home_score !== null && reel.home_score !== undefined;
         let totalPts = 0;
         if (isDone) {
-          pronosticsData.forEach(p => {
+          const reelResult = reel.home_score > reel.away_score ? '1' : reel.away_score > reel.home_score ? '2' : 'N';
+          pronosticsData2.forEach(p => {
             const prono = (p.pronos || {})[m.id];
-            if (!prono) return;
+            if (!prono || !prono.result) return;
             const pH = parseInt(prono.home), pA = parseInt(prono.away);
             if (!isNaN(pH) && !isNaN(pA) && pH === reel.home_score && pA === reel.away_score) totalPts += 3;
-            else if (prono.result && prono.result === reel.result) totalPts += 1;
+            else if (prono.result === reelResult) totalPts += 1;
           });
         }
         const scoreHTML = isDone
@@ -371,12 +372,9 @@ function showParticipation(matchId, matchTitle, phase) {
   const withProno = [];
   const withoutProno = [];
 
-  console.log('allScores:', allScores.map(s=>s.email));
-  console.log('allPronostics emails:', allPronostics.map(p=>p.email));
   allScores.forEach(s => {
     const pData = allPronostics.find(p => p.email === s.email);
     const prono = pData ? (pData.pronos || {})[matchId] : null;
-    console.log(s.pseudo, '| pData:', !!pData, '| prono:', JSON.stringify(prono));
     if (prono && prono.result) {
       const h = prono.home !== '' ? prono.home : '?';
       const a = prono.away !== '' ? prono.away : '?';
