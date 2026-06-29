@@ -113,22 +113,22 @@ const GROUPS = [
 ];
 
 const MATCHES_P2 = [
-  {id:'R1_1',date:'29 juin',home:'Afrique du Sud',away:'Canada',group:'16es'},
-  {id:'R1_2',date:'30 juin',home:'Pays-Bas',away:'Maroc',group:'16es'},
-  {id:'R1_3',date:'30 juin',home:"Côte d'Ivoire",away:'Norvège',group:'16es'},
-  {id:'R1_4',date:'30 juin',home:'France',away:'Suède',group:'16es'},
-  {id:'R1_5',date:'1 juil.',home:'Belgique',away:'Sénégal',group:'16es'},
-  {id:'R1_6',date:'1 juil.',home:'Angleterre',away:'RD Congo',group:'16es'},
-  {id:'R1_7',date:'2 juil.',home:'Mexique',away:'Équateur',group:'16es'},
-  {id:'R1_8',date:'2 juil.',home:'États-Unis',away:'Bosnie',group:'16es'},
-  {id:'R1_9',date:'2 juil.',home:'Espagne',away:'Autriche',group:'16es'},
-  {id:'R1_10',date:'1 juil.',home:'Allemagne',away:'Paraguay',group:'16es'},
-  {id:'R1_11',date:'3 juil.',home:'Suisse',away:'Algérie',group:'16es'},
-  {id:'R1_12',date:'3 juil.',home:'Australie',away:'Égypte',group:'16es'},
-  {id:'R1_13',date:'3 juil.',home:'Portugal',away:'Croatie',group:'16es'},
-  {id:'R1_14',date:'1 juil.',home:'Brésil',away:'Japon',group:'16es'},
-  {id:'R1_15',date:'4 juil.',home:'Colombie',away:'Ghana',group:'16es'},
-  {id:'R1_16',date:'4 juil.',home:'Argentine',away:'Cap-Vert',group:'16es'},
+  {id:'R1_1',  date:'28 juin',  home:'Afrique du Sud', away:'Canada',      group:'16es'},
+  {id:'R1_14', date:'29 juin',  home:'Brésil',          away:'Japon',       group:'16es'},
+  {id:'R1_10', date:'29 juin',  home:'Allemagne',       away:'Paraguay',    group:'16es'},
+  {id:'R1_2',  date:'30 juin',  home:'Pays-Bas',        away:'Maroc',       group:'16es'},
+  {id:'R1_3',  date:'30 juin',  home:"Côte d'Ivoire",   away:'Norvège',     group:'16es'},
+  {id:'R1_4',  date:'30 juin',  home:'France',          away:'Suède',       group:'16es'},
+  {id:'R1_7',  date:'1 juil.', home:'Mexique',         away:'Équateur',    group:'16es'},
+  {id:'R1_6',  date:'1 juil.', home:'Angleterre',      away:'RD Congo',    group:'16es'},
+  {id:'R1_5',  date:'1 juil.', home:'Belgique',        away:'Sénégal',     group:'16es'},
+  {id:'R1_8',  date:'2 juil.', home:'États-Unis',      away:'Bosnie',      group:'16es'},
+  {id:'R1_9',  date:'2 juil.', home:'Espagne',         away:'Autriche',    group:'16es'},
+  {id:'R1_13', date:'3 juil.', home:'Portugal',        away:'Croatie',     group:'16es'},
+  {id:'R1_11', date:'3 juil.', home:'Suisse',          away:'Algérie',     group:'16es'},
+  {id:'R1_12', date:'3 juil.', home:'Australie',       away:'Égypte',      group:'16es'},
+  {id:'R1_16', date:'4 juil.', home:'Argentine',       away:'Cap-Vert',    group:'16es'},
+  {id:'R1_15', date:'4 juil.', home:'Colombie',        away:'Ghana',       group:'16es'},
 ];
 
 function findMatch(matchId) {
@@ -224,7 +224,7 @@ async function renderDetail() {
 
   // Build list of who hasn't pronosticated
   const allParticipants = window._allParticipants || [];
-  const pronoEmails = new Set(pronosticsData.filter(p => (p.pronos||{})[matchId]).map(p => p.email));
+  const pronoEmails = new Set(pronosticsData.filter(p => { const pr = (p.pronos||{})[matchId]; return pr && pr.result; }).map(p => p.email));
   const missing = allParticipants.filter(s => !pronoEmails.has(s.email));
   const initials = name => name.split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2);
 
