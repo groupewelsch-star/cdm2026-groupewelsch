@@ -371,9 +371,12 @@ function showParticipation(matchId, matchTitle, phase) {
   const withProno = [];
   const withoutProno = [];
 
+  console.log('allScores:', allScores.map(s=>s.email));
+  console.log('allPronostics emails:', allPronostics.map(p=>p.email));
   allScores.forEach(s => {
     const pData = allPronostics.find(p => p.email === s.email);
     const prono = pData ? (pData.pronos || {})[matchId] : null;
+    console.log(s.pseudo, '| pData:', !!pData, '| prono:', JSON.stringify(prono));
     if (prono && prono.result) {
       const h = prono.home !== '' ? prono.home : '?';
       const a = prono.away !== '' ? prono.away : '?';
