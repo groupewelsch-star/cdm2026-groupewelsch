@@ -203,7 +203,9 @@ async function renderDetail() {
 
     const pH = prono.home !== '' && prono.home !== null ? parseInt(prono.home) : null;
     const pA = prono.away !== '' && prono.away !== null ? parseInt(prono.away) : null;
-    const scoreStr = (pH !== null && pA !== null && !isNaN(pH) && !isNaN(pA)) ? `${pH}-${pA}` : (prono.result || '?');
+    const scoreStr = isDone
+      ? ((pH !== null && pA !== null && !isNaN(pH) && !isNaN(pA)) ? `${pH}-${pA}` : (prono.result || '?'))
+      : '–';
 
     let pts = 0, cls = 'pts0';
     if (isDone) {
@@ -251,7 +253,7 @@ async function renderDetail() {
         <div class="pred-row ${p.cls === 'pts3' ? 'win3' : p.cls === 'pts1' ? 'win1' : ''}">
           <div class="pred-name">${p.pseudo}</div>
           <div class="pred-score">${p.scoreStr}</div>
-          <div class="pred-pts ${p.pending ? 'pending' : p.cls}">${p.pending ? '⏳' : '+'+p.pts}</div>
+          <div class="pred-pts ${p.pending ? 'pending' : p.cls}">${p.pending ? '' : '+'+p.pts}</div>
         </div>
       `).join('')
     }
