@@ -129,6 +129,7 @@
       <p>Récupère les résultats des matchs joués et recalcule tous les points automatiquement.</p>
       <button class="btn-api" onclick="fetchResultats()">🔄 Récupérer résultats CDM</button>
       <button class="btn-recalc" onclick="recalculerTousLesPoints()">⚡ Recalculer tous les points</button>
+      <button class="btn-api" onclick="recalculComplet()" style="background:#3a1a6b;border-color:#6a3aab;color:#c09fdf;margin-top:8px;display:block;width:100%">🔁 Recalcul complet P1+P2</button>
     </div>
 
     <!-- PARTICIPANTS -->
@@ -490,49 +491,84 @@ async function deleteMatch(matchId) {
   }
 }
 
-async function recalculerTousLesPoints() {
-  showToast('⚡ Calcul des points en cours...');
-
-  // Charger tous les pronostics
-  const pronRes = await fetch(`${SUPABASE_URL}/rest/v1/pronostics`, {
-    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-  });
-  const participants = await pronRes.json();
-
-  for (const p of participants) {
-    let pts1 = 0, pts2 = 0;
-    const pronos = p.pronos || {};
-
-    for (const [matchId, prono] of Object.entries(pronos)) {
-      const reel = resultatsDB[matchId];
-      if (!reel || reel.home_score === null) continue;
-
-      const reelResult = reel.home_score > reel.away_score ? '1' : reel.away_score > reel.home_score ? '2' : 'N';
-      const phase = reel.phase || 1;
-
-      // Convertir en nombres pour la comparaison
-      const pronoHome = prono.home !== '' && prono.home !== null ? parseInt(prono.home) : null;
-      const pronoAway = prono.away !== '' && prono.away !== null ? parseInt(prono.away) : null;
-
-      // Score exact = 3 pts
-      if (pronoHome !== null && pronoAway !== null && !isNaN(pronoHome) && !isNaN(pronoAway) && pronoHome === reel.home_score && pronoAway === reel.away_score) {
-        if (phase === 1) pts1 += 3; else pts2 += 3;
-      }
-      // Bon résultat 1N2 = 1 pt
-      else if (prono.result && prono.result === reelResult) {
-        if (phase === 1) pts1 += 1; else pts2 += 1;
-      }
+// Calcule les points d'un set de pronos pour une phase donnée
+function calcPointsPhase(pronos, phase) {
+  let pts = 0;
+  for (const [matchId, prono] of Object.entries(pronos)) {
+    const reel = resultatsDB[matchId];
+    if (!reel || reel.home_score === null) continue;
+    if ((reel.phase || 1) !== phase) continue;
+    const reelResult = reel.home_score > reel.away_score ? '1' : reel.away_score > reel.home_score ? '2' : 'N';
+    const ph = prono.home !== '' && prono.home !== null ? parseInt(prono.home) : null;
+    const pa = prono.away !== '' && prono.away !== null ? parseInt(prono.away) : null;
+    if (ph !== null && pa !== null && !isNaN(ph) && !isNaN(pa) && ph === reel.home_score && pa === reel.away_score) {
+      pts += 3;
+    } else if (prono.result && prono.result === reelResult) {
+      pts += 1;
     }
+  }
+  return pts;
+}
 
-    // Mettre à jour les scores
+// Recalcul P2 uniquement — préserve les points P1 en base
+async function recalculerTousLesPoints() {
+  showToast('⚡ Calcul des points P2 en cours...');
+
+  const [pronRes, scoresRes] = await Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/pronostics?phase=eq.2`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+    fetch(`${SUPABASE_URL}/rest/v1/scores`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
+  ]);
+  const pronos2 = await pronRes.json();
+  const scoresData = await scoresRes.json();
+  const scoresMap = {};
+  scoresData.forEach(s => { scoresMap[s.email] = s; });
+
+  for (const p of pronos2) {
+    const pts2 = calcPointsPhase(p.pronos || {}, 2);
+    const pts1 = (scoresMap[p.email] && scoresMap[p.email].points_phase1) || 0;
     await fetch(`${SUPABASE_URL}/rest/v1/scores?email=eq.${encodeURIComponent(p.email)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ points_phase2: pts2, total_points: pts1 + pts2, last_updated: new Date().toISOString() })
+    });
+  }
+
+  showToast('✅ Classement mis à jour !');
+  await loadParticipants();
+}
+
+// Recalcul complet P1+P2 — à utiliser pour restaurer les points P1 perdus
+async function recalculComplet() {
+  if (!confirm('Recalcul complet P1+P2 depuis tous les pronostics et résultats. Continuer ?')) return;
+  showToast('🔁 Recalcul complet en cours...');
+
+  const [allPronRes, allScoresRes] = await Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/pronostics`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+    fetch(`${SUPABASE_URL}/rest/v1/scores`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
+  ]);
+  const allPronos = await allPronRes.json();
+  const allScores = await allScoresRes.json();
+
+  // Grouper pronos par email et phase
+  const byEmail = {};
+  allPronos.forEach(p => {
+    if (!byEmail[p.email]) byEmail[p.email] = { p1: {}, p2: {} };
+    if ((p.phase || 1) === 1) byEmail[p.email].p1 = p.pronos || {};
+    else byEmail[p.email].p2 = p.pronos || {};
+  });
+
+  for (const score of allScores) {
+    const data = byEmail[score.email] || { p1: {}, p2: {} };
+    const pts1 = calcPointsPhase(data.p1, 1);
+    const pts2 = calcPointsPhase(data.p2, 2);
+    await fetch(`${SUPABASE_URL}/rest/v1/scores?email=eq.${encodeURIComponent(score.email)}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' },
       body: JSON.stringify({ points_phase1: pts1, points_phase2: pts2, total_points: pts1 + pts2, last_updated: new Date().toISOString() })
     });
   }
 
-  showToast('✅ Classement mis à jour !');
+  showToast('✅ Recalcul complet terminé !');
   await loadParticipants();
 }
 
