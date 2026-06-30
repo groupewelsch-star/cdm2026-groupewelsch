@@ -425,7 +425,7 @@ const MATCHES_P2 = [
   {id:'R1_16', home:'Argentine', away:'Cap-Vert'},
 ];
 
-function buildMatchHTML(prono, reel, home, away, stats) {
+function buildMatchHTML(prono, reel, home, away, stats, phase) {
   const pronoH = prono && prono.home !== '' && prono.home !== null ? prono.home : '?';
   const pronoA = prono && prono.away !== '' && prono.away !== null ? prono.away : '?';
   const pronoScore = pronoH !== '?' || pronoA !== '?' ? `${pronoH}-${pronoA}` : '—';
@@ -442,6 +442,8 @@ function buildMatchHTML(prono, reel, home, away, stats) {
     } else {
       pts = 0; matchClass = 'lost'; ptsClass = 'pts0'; ptsLabel = '0'; stats.nb0++;
     }
+    if (phase === 2) stats.pts2 = (stats.pts2 || 0) + pts;
+    else stats.pts1 = (stats.pts1 || 0) + pts;
   }
   return `<div class="detail-match ${matchClass}">
     <div class="detail-teams">${home} vs ${away}</div>
@@ -470,10 +472,10 @@ async function showDetail(email) {
   const initials = scoreData.pseudo.split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2);
   document.getElementById('detailAvatar').textContent = initials;
   document.getElementById('detailName').textContent = scoreData.pseudo;
-  document.getElementById('detailScore').textContent = `${scoreData.total_points} pts total · ${scoreData.points_phase1} pts P1 · ${scoreData.points_phase2} pts P2`;
+  // pts2 and total computed after HTML generation below
 
   const pronos = participant.pronos || {};
-  const stats = { nb3: 0, nb1: 0, nb0: 0 };
+  const stats = { nb3: 0, nb1: 0, nb0: 0, pts2: 0, pts1: 0 };
 
   // === PHASE 2 (ouvert par défaut) ===
   let p2HTML = '';
@@ -481,7 +483,7 @@ async function showDetail(email) {
     const prono = phase2Pronos[m.id];
     const reel = allResultats[m.id];
     if (!prono && !reel) return;
-    p2HTML += buildMatchHTML(prono, reel, m.home, m.away, stats);
+    p2HTML += buildMatchHTML(prono, reel, m.home, m.away, stats, 2);
   });
 
   // === PHASE 1 (replié par défaut) ===
@@ -492,7 +494,7 @@ async function showDetail(email) {
       const prono = pronos[m.id];
       const reel = allResultats[m.id];
       if (!prono) return;
-      groupHTML += buildMatchHTML(prono, reel, m.home, m.away, stats);
+      groupHTML += buildMatchHTML(prono, reel, m.home, m.away, stats, 1);
     });
     if (groupHTML) {
       p1HTML += `<div class="detail-group">
@@ -507,7 +509,7 @@ async function showDetail(email) {
   if (p2HTML) {
     bodyHTML += `<div class="phase-section">
       <div class="phase-section-header phase2" onclick="toggleSection('p2section')">
-        <div><div class="phase-section-title">⚡ Phase finale · 16es</div><div class="phase-section-pts">${scoreData.points_phase2} pts</div></div>
+        <div><div class="phase-section-title">⚡ Phase finale · 16es</div><div class="phase-section-pts">${stats.pts2} pts</div></div>
         <span class="phase-section-chevron open" id="chevron_p2section">›</span>
       </div>
       <div class="phase-section-body open" id="p2section">${p2HTML}</div>
@@ -528,6 +530,8 @@ async function showDetail(email) {
   }
 
   document.getElementById('detailBody').innerHTML = bodyHTML || '<p style="color:#5a7a9a;font-size:13px;padding:10px">Aucun pronostic trouvé.</p>';
+  const computedTotal = scoreData.points_phase1 + stats.pts2;
+  document.getElementById('detailScore').textContent = `${computedTotal} pts total · ${scoreData.points_phase1} pts P1 · ${stats.pts2} pts P2`;
   document.getElementById('detailSummary').innerHTML = `
     <div class="detail-sum-item"><div class="detail-sum-val" style="color:#d4af37">${stats.nb3}</div><div class="detail-sum-lbl">Scores exacts</div></div>
     <div class="detail-sum-item"><div class="detail-sum-val" style="color:#2ea55a">${stats.nb1}</div><div class="detail-sum-lbl">Bons résultats</div></div>
