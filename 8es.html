@@ -220,6 +220,7 @@ async function verifyEmail() {
     currentEmail = email;
     currentPseudo = data[0].pseudo;
     const pts1 = data[0].points_phase1;
+    const pts2 = data[0].points_phase2 || 0;
 
     // Check existing Phase 2 pronos
     const res2 = await fetch(`${SUPABASE_URL}/rest/v1/pronostics?email=eq.${encodeURIComponent(email)}&phase=eq.3&select=pronos`, {
@@ -232,7 +233,7 @@ async function verifyEmail() {
 
     document.getElementById('loadingOverlay').classList.remove('open');
     document.getElementById('recapName').textContent = currentPseudo + ' ✅';
-    document.getElementById('recapPts').textContent = `Phase 1 : ${pts1} pts · Les 8es s'ajouteront à ce total`;
+    document.getElementById('recapPts').textContent = `Total actuel : ${pts1 + pts2} pts (P1: ${pts1} + 16es: ${pts2}) · Les 8es s'ajouteront`;
     document.getElementById('phase1Recap').style.display = 'block';
     document.getElementById('verifyBtn').disabled = true;
     document.getElementById('emailPrefix').disabled = true;
