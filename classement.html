@@ -301,14 +301,15 @@ async function loadClassement() {
     allResultats = {};
     resultatsData.forEach(r => { allResultats[r.match_id] = r; });
 
-    // Compute accuracy (% bons pronostics) per participant
+    // Compute accuracy (% bons pronostics) per participant — Phase 1 uniquement
     accuracyByEmail = {};
-    pronosticsData.forEach(p => {
+    pronosticsData.filter(p => (p.phase || 1) === 1).forEach(p => {
       const pronos = p.pronos || {};
       let nbJoues = 0, nbBons = 0;
       Object.keys(pronos).forEach(matchId => {
         const reel = allResultats[matchId];
         if (!reel || reel.home_score === null || reel.home_score === undefined) return;
+        if ((reel.phase || 1) !== 1) return; // P1 only
         nbJoues++;
         const prono = pronos[matchId];
         const pH = prono.home !== '' && prono.home !== null ? parseInt(prono.home) : null;
@@ -396,7 +397,7 @@ function renderRanking() {
         <div class="rank-pseudo">${s.pseudo}</div>
         <div class="rank-breakdown">
           <div class="rank-total">${pts} pts</div>
-          <div class="rank-detail">${s.points_phase1}pts P1 · ${s.points_phase2}pts P2 <span class="rank-accuracy">🎯 ${acc(s)}%</span></div>
+          <div class="rank-detail">${s.points_phase1}pts P1 · ${s.points_phase2}pts P2+3 <span class="rank-accuracy">🎯 ${acc(s)}%</span></div>
         </div>
         <div class="rank-chevron">›</div>
       </div>`;
@@ -425,6 +426,17 @@ const MATCHES_P2 = [
   {id:'R1_16', home:'Argentine', away:'Cap-Vert'},
 ];
 
+const MATCHES_P3 = [
+  {id:'R2_1', date:'5 juil.',  home:'Canada',      away:'Maroc'},
+  {id:'R2_2', date:'5 juil.',  home:'Paraguay',    away:'France'},
+  {id:'R2_3', date:'6 juil.',  home:'Brésil',      away:'Norvège'},
+  {id:'R2_4', date:'6 juil.',  home:'Mexique',     away:'Angleterre'},
+  {id:'R2_5', date:'6 juil.',  home:'Portugal',    away:'Espagne'},
+  {id:'R2_6', date:'7 juil.',  home:'États-Unis',  away:'Belgique'},
+  {id:'R2_7', date:'7 juil.',  home:'Argentine',   away:'Égypte'},
+  {id:'R2_8', date:'7 juil.',  home:'Suisse',      away:'Colombie'},
+];
+
 function buildMatchHTML(prono, reel, home, away, stats, phase) {
   const pronoH = prono && prono.home !== '' && prono.home !== null ? prono.home : '?';
   const pronoA = prono && prono.away !== '' && prono.away !== null ? prono.away : '?';
@@ -442,7 +454,8 @@ function buildMatchHTML(prono, reel, home, away, stats, phase) {
     } else {
       pts = 0; matchClass = 'lost'; ptsClass = 'pts0'; ptsLabel = '0'; stats.nb0++;
     }
-    if (phase === 2) stats.pts2 = (stats.pts2 || 0) + pts;
+    if (phase === 3) stats.pts2 = (stats.pts2 || 0) + pts;
+    else if (phase === 2) stats.pts2_16 = (stats.pts2_16 || 0) + pts;
     else stats.pts1 = (stats.pts1 || 0) + pts;
   }
   return `<div class="detail-match ${matchClass}">
@@ -460,13 +473,16 @@ async function showDetail(email) {
   if (!participant || !scoreData) { alert('Pronostics non disponibles pour ce participant.'); return; }
 
   // Load Phase 2 pronos
-  let phase2Pronos = {};
+  let phase2Pronos = {}, phase3Pronos = {};
   try {
-    const res2 = await fetch(`${SUPABASE_URL}/rest/v1/pronostics?email=eq.${encodeURIComponent(email)}&phase=eq.2&select=pronos`, {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-    });
+    const [res2, res3] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/pronostics?email=eq.${encodeURIComponent(email)}&phase=eq.2&select=pronos`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+      fetch(`${SUPABASE_URL}/rest/v1/pronostics?email=eq.${encodeURIComponent(email)}&phase=eq.3&select=pronos`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
+    ]);
     const d2 = await res2.json();
+    const d3 = await res3.json();
     if (d2.length) phase2Pronos = d2[0].pronos || {};
+    if (d3.length) phase3Pronos = d3[0].pronos || {};
   } catch(e) {}
 
   const initials = scoreData.pseudo.split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2);
@@ -475,9 +491,18 @@ async function showDetail(email) {
   // pts2 and total computed after HTML generation below
 
   const pronos = participant.pronos || {};
-  const stats = { nb3: 0, nb1: 0, nb0: 0, pts2: 0, pts1: 0 };
+  const stats = { nb3: 0, nb1: 0, nb0: 0, pts2: 0, pts2_16: 0, pts1: 0 };
 
-  // === PHASE 2 (ouvert par défaut) ===
+  // === PHASE 3 - 8es (ouvert par défaut) ===
+  let p3HTML = '';
+  MATCHES_P3.forEach(m => {
+    const prono = phase3Pronos[m.id];
+    const reel = allResultats[m.id];
+    if (!prono && !reel) return;
+    p3HTML += buildMatchHTML(prono, reel, m.home, m.away, stats, 3);
+  });
+
+  // === PHASE 2 - 16es (replié par défaut) ===
   let p2HTML = '';
   MATCHES_P2.forEach(m => {
     const prono = phase2Pronos[m.id];
@@ -506,16 +531,23 @@ async function showDetail(email) {
 
   let bodyHTML = '';
   // Phase 2 section (open)
+  if (p3HTML) {
+    bodyHTML += `<div class="phase-section">
+      <div class="phase-section-header phase2" onclick="toggleSection('p3section')">
+        <div><div class="phase-section-title">🔥 8es de finale</div><div class="phase-section-pts">${stats.pts2} pts</div></div>
+        <span class="phase-section-chevron open" id="chevron_p3section">›</span>
+      </div>
+      <div class="phase-section-body open" id="p3section">${p3HTML}</div>
+    </div>`;
+  }
   if (p2HTML) {
     bodyHTML += `<div class="phase-section">
       <div class="phase-section-header phase2" onclick="toggleSection('p2section')">
-        <div><div class="phase-section-title">⚡ Phase finale · 16es</div><div class="phase-section-pts">${stats.pts2} pts</div></div>
-        <span class="phase-section-chevron open" id="chevron_p2section">›</span>
+        <div><div class="phase-section-title">⚡ 16es de finale</div><div class="phase-section-pts">${stats.pts2_16} pts</div></div>
+        <span class="phase-section-chevron" id="chevron_p2section">›</span>
       </div>
-      <div class="phase-section-body open" id="p2section">${p2HTML}</div>
+      <div class="phase-section-body" id="p2section">${p2HTML}</div>
     </div>`;
-  } else {
-    bodyHTML += `<div style="padding:10px 0;font-size:12px;color:#5a7a9a">⏳ Aucun pronostic Phase 2 enregistré</div>`;
   }
 
   // Phase 1 section (collapsed by default)
@@ -530,8 +562,9 @@ async function showDetail(email) {
   }
 
   document.getElementById('detailBody').innerHTML = bodyHTML || '<p style="color:#5a7a9a;font-size:13px;padding:10px">Aucun pronostic trouvé.</p>';
-  const computedTotal = scoreData.points_phase1 + stats.pts2;
-  document.getElementById('detailScore').textContent = `${computedTotal} pts total · ${scoreData.points_phase1} pts P1 · ${stats.pts2} pts P2`;
+  const computedP23 = stats.pts2 + stats.pts2_16;
+  const computedTotal = scoreData.points_phase1 + computedP23;
+  document.getElementById('detailScore').textContent = `${computedTotal} pts total · ${scoreData.points_phase1} pts P1 · ${computedP23} pts P2+3`;
   document.getElementById('detailSummary').innerHTML = `
     <div class="detail-sum-item"><div class="detail-sum-val" style="color:#d4af37">${stats.nb3}</div><div class="detail-sum-lbl">Scores exacts</div></div>
     <div class="detail-sum-item"><div class="detail-sum-val" style="color:#2ea55a">${stats.nb1}</div><div class="detail-sum-lbl">Bons résultats</div></div>

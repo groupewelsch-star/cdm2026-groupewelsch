@@ -185,6 +185,17 @@ const MATCHES_P2 = [
 
 const DATE_ORDER_P2 = ['28 juin','29 juin','30 juin','1 juil.','2 juil.','3 juil.','4 juil.','5 juil.','6 juil.','7 juil.','8 juil.'];
 
+const MATCHES_P3 = [
+  {id:'R2_1', date:'5 juil.',  home:'Canada',      away:'Maroc',       group:'8', heure:'19h00'},
+  {id:'R2_2', date:'5 juil.',  home:'Paraguay',    away:'France',      group:'8', heure:'23h00'},
+  {id:'R2_3', date:'6 juil.',  home:'Brésil',      away:'Norvège',     group:'8', heure:'22h00'},
+  {id:'R2_4', date:'6 juil.',  home:'Mexique',     away:'Angleterre',  group:'8', heure:'02h00'},
+  {id:'R2_5', date:'6 juil.',  home:'Portugal',    away:'Espagne',     group:'8', heure:'21h00'},
+  {id:'R2_6', date:'7 juil.',  home:'États-Unis',  away:'Belgique',    group:'8', heure:'02h00'},
+  {id:'R2_7', date:'7 juil.',  home:'Argentine',   away:'Égypte',      group:'8', heure:'18h00'},
+  {id:'R2_8', date:'7 juil.',  home:'Suisse',      away:'Colombie',    group:'8', heure:'22h00'},
+];
+
 function buildMatchList() {
   const list = [];
   GROUPS.forEach(g => {
@@ -205,15 +216,17 @@ async function loadCalendar() {
 
   try {
     const _h = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` };
-    const [resResultats, resP1, resP2, resScores] = await Promise.all([
+    const [resResultats, resP1, resP2, resP3, resScores] = await Promise.all([
       fetch(`${SUPABASE_URL}/rest/v1/resultats`, { headers: _h }),
       fetch(`${SUPABASE_URL}/rest/v1/pronostics?phase=eq.1`, { headers: _h }),
       fetch(`${SUPABASE_URL}/rest/v1/pronostics?phase=eq.2`, { headers: _h }),
+      fetch(`${SUPABASE_URL}/rest/v1/pronostics?phase=eq.3`, { headers: _h }),
       fetch(`${SUPABASE_URL}/rest/v1/scores?select=pseudo,email`, { headers: _h })
     ]);
     const resultatsData = await resResultats.json();
     const pronosticsData = await resP1.json();
     const pronosticsData2 = await resP2.json();
+    const pronosticsData3 = await resP3.json();
     const scoresData = await resScores.json();
 
     const resultatsByMatch = {};
@@ -223,6 +236,7 @@ async function loadCalendar() {
     sessionStorage.setItem('cdm_pronostics', JSON.stringify(pronosticsData));
     window._allPronostics = pronosticsData;
     window._allPronostics2 = pronosticsData2;
+    window._allPronostics3 = pronosticsData3;
     window._allResultats = resultatsByMatch;
     window._allScores = scoresData;
 
@@ -273,7 +287,7 @@ async function loadCalendar() {
     const p1Matches = matchList.filter(m => !m.id.startsWith('R'));
     const p2Matches = matchList.filter(m => m.id.startsWith('R'));
 
-    function buildPhaseHTML(matches) {
+    function buildPhaseHTML(matches, pronosData, phaseNum) {
       let phaseHTML = '';
       let currentDate = null;
       matches.forEach(m => {
@@ -287,7 +301,7 @@ async function loadCalendar() {
         let totalPts = 0;
         if (isDone) {
           const reelResult = reel.home_score > reel.away_score ? '1' : reel.away_score > reel.home_score ? '2' : 'N';
-          pronosticsData2.forEach(p => {
+          pronosData.forEach(p => {
             const prono = (p.pronos || {})[m.id];
             if (!prono || !prono.result) return;
             const pH = parseInt(prono.home), pA = parseInt(prono.away);
@@ -295,14 +309,12 @@ async function loadCalendar() {
             else if (prono.result === reelResult) totalPts += 1;
           });
         }
+        const heureLabel = m.heure ? ` · ${m.heure}` : '';
         const scoreHTML = isDone
           ? `<div class="match-score">${reel.home_score}-${reel.away_score}</div><div class="match-pts">Total : <strong>${totalPts} pts</strong></div>`
-          : `<div class="match-score pending">⏳ À venir</div>`;
-        // Count participants who pronosticated this match
-        const isP2match = m.id.startsWith('R');
+          : `<div class="match-score pending">⏳${heureLabel}</div>`;
         let nbPronos = 0;
-        const pronosToCheck = isP2match ? pronosticsData2 : pronosticsData;
-        pronosToCheck.forEach(p => {
+        pronosData.forEach(p => {
           const prono = (p.pronos || {})[m.id];
           if (prono && prono.result) nbPronos++;
         });
@@ -316,10 +328,10 @@ async function loadCalendar() {
             <div class="match-teams">${m.home} <span class="vs">vs</span> ${m.away}</div>
             ${partHTML}
           </div>
-          <div class="match-score-zone" onclick="showParticipation('${m.id}','${m.home} vs ${m.away}',${isP2match ? 2 : 1})">
+          <div class="match-score-zone" onclick="showParticipation('${m.id}','${m.home} vs ${m.away}',${phaseNum})">
             ${scoreHTML}
           </div>
-          <div class="match-chevron" onclick="showParticipation('${m.id}','${m.home} vs ${m.away}',${isP2match ? 2 : 1})">›</div>
+          <div class="match-chevron" onclick="showParticipation('${m.id}','${m.home} vs ${m.away}',${phaseNum})">›</div>
         </div>`;
       });
       if (currentDate) phaseHTML += '</div>';
@@ -329,15 +341,25 @@ async function loadCalendar() {
     // Phase 1 = groupes A-L (from matchList)
     // Phase 2 = 16es (from MATCHES_P2 directly, always shown even without scores)
     const p2MatchesSorted = [...MATCHES_P2].sort((a,b) => DATE_ORDER_P2.indexOf(a.date) - DATE_ORDER_P2.indexOf(b.date));
-    const p1HTML = buildPhaseHTML(p1Matches);
-    const p2HTML = buildPhaseHTML(p2MatchesSorted);
+    const p1HTML = buildPhaseHTML(p1Matches, pronosticsData, 1);
+    const p2HTML = buildPhaseHTML(p2MatchesSorted, pronosticsData2, 2);
+
+    // Phase 3 = 8es de finale
+    const p3MatchesSorted = [...MATCHES_P3];
+    const p3HTML = buildPhaseHTML(p3MatchesSorted, pronosticsData3, 3);
 
     container.innerHTML = `
-      <div class="phase-header active" onclick="togglePhase('p2')">
-        <div><div class="phase-header-title">⚡ Phase finale · 16es de finale</div><div class="phase-header-sub">Matchs en cours</div></div>
-        <span class="phase-header-chevron open" id="chevron_p2">›</span>
+      <div class="phase-header active" onclick="togglePhase('p3')">
+        <div><div class="phase-header-title">🔥 8es de finale</div><div class="phase-header-sub">Phase en cours</div></div>
+        <span class="phase-header-chevron open" id="chevron_p3">›</span>
       </div>
-      <div class="phase-body open" id="body_p2">${p2HTML || '<p style="color:#5a7a9a;font-size:13px;padding:10px 0">Aucun match de phase finale enregistré.</p>'}</div>
+      <div class="phase-body open" id="body_p3">${p3HTML || '<p style="color:#5a7a9a;font-size:13px;padding:10px 0">Aucun match enregistré.</p>'}</div>
+
+      <div class="phase-header" onclick="togglePhase('p2')" style="margin-top:16px">
+        <div><div class="phase-header-title">⚡ 16es de finale</div><div class="phase-header-sub">Terminés · Cliquer pour voir le détail</div></div>
+        <span class="phase-header-chevron" id="chevron_p2">›</span>
+      </div>
+      <div class="phase-body" id="body_p2">${p2HTML || '<p style="color:#5a7a9a;font-size:13px;padding:10px 0">Aucun match de phase finale enregistré.</p>'}</div>
 
       <div class="phase-header" onclick="togglePhase('p1')" style="margin-top:16px">
         <div><div class="phase-header-title">⚽ Phase de poules</div><div class="phase-header-sub">Terminée · Cliquer pour voir le détail</div></div>
@@ -361,13 +383,13 @@ function goToMatch(matchId) {
 }
 
 function showParticipation(matchId, matchTitle, phase) {
-  const allPronostics = phase === 2 ? (window._allPronostics2 || []) : (window._allPronostics || []);
+  const allPronostics = phase === 3 ? (window._allPronostics3 || []) : phase === 2 ? (window._allPronostics2 || []) : (window._allPronostics || []);
   console.log('showParticipation phase:', phase, 'pronos count:', allPronostics.length, 'scores count:', (window._allScores||[]).length);
   const allScores = window._allScores || [];
   const reel = (window._allResultats || {})[matchId];
 
   document.getElementById('partMatchTitle').textContent = matchTitle;
-  document.getElementById('partMatchSub').textContent = phase === 2 ? '16es de finale' : 'Phase de poules';
+  document.getElementById('partMatchSub').textContent = phase === 3 ? '8es de finale' : phase === 2 ? '16es de finale' : 'Phase de poules';
 
   const withProno = [];
   const withoutProno = [];

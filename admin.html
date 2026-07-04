@@ -129,7 +129,7 @@
       <p>Récupère les résultats des matchs joués et recalcule tous les points automatiquement.</p>
       <button class="btn-api" onclick="fetchResultats()">🔄 Récupérer résultats CDM</button>
       <button class="btn-recalc" onclick="recalculerTousLesPoints()">⚡ Recalculer tous les points</button>
-      <button class="btn-api" onclick="recalculComplet()" style="background:#3a1a6b;border-color:#6a3aab;color:#c09fdf;margin-top:8px;display:block;width:100%">🔁 Recalcul complet P1+P2</button>
+      <button class="btn-api" onclick="recalculComplet()" style="background:#3a1a6b;border-color:#6a3aab;color:#c09fdf;margin-top:8px;display:block;width:100%">🔁 Recalcul complet P1+P2+P3</button>
     </div>
 
     <!-- PARTICIPANTS -->
@@ -164,12 +164,20 @@
       <div id="matchsAdminP1"></div>
     </div>
 
-    <div class="phase-toggle active" onclick="toggleSection('matchsP2Body','chevMatchsP2')">
-      <div><div class="phase-toggle-title">⚡ Résultats Phase 2 – 16es de finale</div><div class="phase-toggle-sub">Phase en cours</div></div>
-      <span class="phase-toggle-chevron open" id="chevMatchsP2">›</span>
+    <div class="phase-toggle" onclick="toggleSection('matchsP2Body','chevMatchsP2')">
+      <div><div class="phase-toggle-title">⚡ Résultats Phase 2 – 16es de finale</div><div class="phase-toggle-sub">Cliquer pour déplier</div></div>
+      <span class="phase-toggle-chevron" id="chevMatchsP2">›</span>
     </div>
-    <div class="phase-body open" id="matchsP2Body">
+    <div class="phase-body" id="matchsP2Body">
       <div id="matchsAdminP2"></div>
+    </div>
+
+    <div class="phase-toggle active" onclick="toggleSection('matchsP3Body','chevMatchsP3')">
+      <div><div class="phase-toggle-title">🔥 Résultats Phase 3 – 8es de finale</div><div class="phase-toggle-sub">Phase en cours</div></div>
+      <span class="phase-toggle-chevron open" id="chevMatchsP3">›</span>
+    </div>
+    <div class="phase-body open" id="matchsP3Body">
+      <div id="matchsAdminP3"></div>
     </div>
 
   </div>
@@ -212,6 +220,17 @@ const MATCHES_P2 = [
   {id:'R1_12', date:'3 juil.', home:'🇦🇺 Australie',      away:'🇪🇬 Égypte',       phase:2},
   {id:'R1_16', date:'4 juil.', home:'🇦🇷 Argentine',      away:'🇨🇻 Cap-Vert',     phase:2},
   {id:'R1_15', date:'4 juil.', home:'🇨🇴 Colombie',       away:'🇬🇭 Ghana',        phase:2},
+];
+
+const MATCHES_P3 = [
+  {id:'R2_1', date:'5 juil.',  home:'🇨🇦 Canada',      away:'🇲🇦 Maroc',         phase:3},
+  {id:'R2_2', date:'5 juil.',  home:'🇵🇾 Paraguay',    away:'🇫🇷 France',         phase:3},
+  {id:'R2_3', date:'6 juil.',  home:'🇧🇷 Brésil',      away:'🇳🇴 Norvège',        phase:3},
+  {id:'R2_4', date:'6 juil.',  home:'🇲🇽 Mexique',     away:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Angleterre',   phase:3},
+  {id:'R2_5', date:'6 juil.',  home:'🇵🇹 Portugal',    away:'🇪🇸 Espagne',        phase:3},
+  {id:'R2_6', date:'7 juil.',  home:'🇺🇸 États-Unis',  away:'🇧🇪 Belgique',       phase:3},
+  {id:'R2_7', date:'7 juil.',  home:'🇦🇷 Argentine',   away:'🇪🇬 Égypte',         phase:3},
+  {id:'R2_8', date:'7 juil.',  home:'🇨🇭 Suisse',      away:'🇨🇴 Colombie',       phase:3},
 ];
 
 const GROUPS = [
@@ -420,6 +439,40 @@ function renderMatchsAdmin() {
     p2block.appendChild(row);
   });
   p2container.appendChild(p2block);
+
+  // Rendu Phase 3 - 8es de finale
+  const p3container = document.getElementById('matchsAdminP3') || container;
+  p3container.innerHTML = '';
+  const p3block = document.createElement('div');
+  p3block.className = 'group-block';
+  p3block.innerHTML = `<div class="group-header"><div class="group-letter">8</div><div class="group-name">8es de finale</div></div>`;
+  MATCHES_P3.forEach(m => {
+    const r = resultatsDB[m.id];
+    const isDone = r && r.home_score !== null && r.home_score !== undefined;
+    const row = document.createElement('div');
+    row.className = 'match-admin';
+    row.innerHTML = `
+      <div class="match-admin-top">
+        <div class="match-admin-date">${m.date}</div>
+        <div class="match-admin-teams">
+          <span class="team-adm">${shortN(m.home)}</span>
+          <span class="flag-adm">${getF(m.home)}</span>
+          <span class="vs-adm">vs</span>
+          <span class="flag-adm">${getF(m.away)}</span>
+          <span class="team-adm away">${shortN(m.away)}</span>
+        </div>
+        <span class="match-status ${isDone?'done':'pending'}">${isDone?'✓ '+r.home_score+'-'+r.away_score:'En attente'}</span>
+      </div>
+      <div class="score-admin-row">
+        <input class="score-admin-box" type="number" min="0" max="20" id="ah_${m.id}" placeholder="?" value="${isDone?r.home_score:''}">
+        <span class="score-admin-dash">–</span>
+        <input class="score-admin-box" type="number" min="0" max="20" id="aa_${m.id}" placeholder="?" value="${isDone?r.away_score:''}">
+        <button class="save-match-btn" onclick="saveMatch(this)" data-id="${m.id}" data-home="${m.home}" data-away="${m.away}" data-phase="3">💾 Sauver</button>
+        ${isDone ? `<button class="delete-match-btn" onclick="deleteMatch('${m.id}')">🗑️ Annuler</button>` : ""}
+      </div>`;
+    p3block.appendChild(row);
+  });
+  p3container.appendChild(p3block);
 }
 
 async function saveMatch(btn) {
@@ -542,34 +595,14 @@ function calcPointsPhase(pronos, phase) {
 
 // Recalcul P2 uniquement — préserve les points P1 en base
 async function recalculerTousLesPoints() {
-  showToast('⚡ Calcul des points P2 en cours...');
-
-  const [pronRes, scoresRes] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/pronostics?phase=eq.2`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
-    fetch(`${SUPABASE_URL}/rest/v1/scores`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
-  ]);
-  const pronos2 = await pronRes.json();
-  const scoresData = await scoresRes.json();
-  const scoresMap = {};
-  scoresData.forEach(s => { scoresMap[s.email] = s; });
-
-  for (const p of pronos2) {
-    const pts2 = calcPointsPhase(p.pronos || {}, 2);
-    const pts1 = (scoresMap[p.email] && scoresMap[p.email].points_phase1) || 0;
-    await fetch(`${SUPABASE_URL}/rest/v1/scores?email=eq.${encodeURIComponent(p.email)}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ points_phase2: pts2, total_points: pts1 + pts2, last_updated: new Date().toISOString() })
-    });
-  }
-
-  showToast('✅ Classement mis à jour !');
-  await loadParticipants();
+  showToast('⚡ Calcul des points en cours...');
+  // Recalcul complet P1+P2+P3 pour être sûr
+  await recalculComplet();
 }
 
-// Recalcul complet P1+P2 — à utiliser pour restaurer les points P1 perdus
+// Recalcul complet P1+P2+P3 — à utiliser pour restaurer tous les points
 async function recalculComplet() {
-  if (!confirm('Recalcul complet P1+P2 depuis tous les pronostics et résultats. Continuer ?')) return;
+  if (!confirm('Recalcul complet P1+P2+P3 depuis tous les pronostics et résultats. Continuer ?')) return;
   showToast('🔁 Recalcul complet en cours...');
 
   const [allPronRes, allScoresRes] = await Promise.all([
@@ -582,19 +615,22 @@ async function recalculComplet() {
   // Grouper pronos par email et phase
   const byEmail = {};
   allPronos.forEach(p => {
-    if (!byEmail[p.email]) byEmail[p.email] = { p1: {}, p2: {} };
-    if ((p.phase || 1) === 1) byEmail[p.email].p1 = p.pronos || {};
-    else byEmail[p.email].p2 = p.pronos || {};
+    if (!byEmail[p.email]) byEmail[p.email] = { p1: {}, p2: {}, p3: {} };
+    const ph = p.phase || 1;
+    if (ph === 1) byEmail[p.email].p1 = p.pronos || {};
+    else if (ph === 2) byEmail[p.email].p2 = p.pronos || {};
+    else if (ph === 3) byEmail[p.email].p3 = p.pronos || {};
   });
 
   for (const score of allScores) {
-    const data = byEmail[score.email] || { p1: {}, p2: {} };
+    const data = byEmail[score.email] || { p1: {}, p2: {}, p3: {} };
     const pts1 = calcPointsPhase(data.p1, 1);
     const pts2 = calcPointsPhase(data.p2, 2);
+    const pts3 = calcPointsPhase(data.p3, 3);
     await fetch(`${SUPABASE_URL}/rest/v1/scores?email=eq.${encodeURIComponent(score.email)}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ points_phase1: pts1, points_phase2: pts2, total_points: pts1 + pts2, last_updated: new Date().toISOString() })
+      body: JSON.stringify({ points_phase1: pts1, points_phase2: pts2 + pts3, total_points: pts1 + pts2 + pts3, last_updated: new Date().toISOString() })
     });
   }
 
