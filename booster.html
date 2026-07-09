@@ -232,11 +232,11 @@ async function verifyEmail() {
   });
   const d2 = await res2.json();
   if (d2.length && d2[0].pronos) {
-    const p = d2[0].pronos;
+    const p = d2[0].pronos.FINAL || d2[0].pronos;
     if (p.team1) document.getElementById('team1').value = p.team1;
     if (p.team2) document.getElementById('team2').value = p.team2;
-    if (p.score1 !== undefined && p.score1 !== '') document.getElementById('score1').value = p.score1;
-    if (p.score2 !== undefined && p.score2 !== '') document.getElementById('score2').value = p.score2;
+    if (p.score1 !== null && p.score1 !== undefined) document.getElementById('score1').value = p.score1;
+    if (p.score2 !== null && p.score2 !== undefined) document.getElementById('score2').value = p.score2;
     if (p.result) setResult(p.result);
     updateVs();
   }
