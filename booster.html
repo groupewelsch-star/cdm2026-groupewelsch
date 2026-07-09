@@ -236,7 +236,7 @@ async function verifyEmail() {
 }
 
 async function submitBooster() {
-  if (!currentEmail) { showToast('Vérifie ton identifiant d'abord', 'error'); return; }
+  if (!currentEmail) { showToast('Vérifie ton identifiant dabord', 'error'); return; }
   const t1 = document.getElementById('team1').value;
   const t2 = document.getElementById('team2').value;
   if (!t1 || !t2) { showToast('Choisis les deux équipes finalistes', 'error'); return; }
