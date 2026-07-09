@@ -142,8 +142,18 @@ const MATCHES_P3 = [
   {id:'R2_8', date:'7 juil.',  home:'Suisse',      away:'Colombie',    group:'8es'},
 ];
 
+const MATCHES_P4 = [
+  {id:'R3_1', date:'9 juil.',   home:'France',     away:'Maroc',       group:'QF'},
+  {id:'R3_2', date:'10 juil.',  home:'Espagne',    away:'Belgique',    group:'QF'},
+  {id:'R3_3', date:'11 juil.',  home:'Norvège',    away:'Angleterre',  group:'QF'},
+  {id:'R3_4', date:'12 juil.',  home:'Argentine',  away:'Suisse',      group:'QF'},
+];
+
 function findMatch(matchId) {
-  // Check Phase 3 (8es) first
+  // Check Phase 4 (QF) first
+  const p4 = MATCHES_P4.find(m => m.id === matchId);
+  if (p4) return { ...p4, phase: 4 };
+  // Check Phase 3 (8es)
   const p3 = MATCHES_P3.find(m => m.id === matchId);
   if (p3) return { ...p3, phase: 3 };
   // Check Phase 2 (16es)
