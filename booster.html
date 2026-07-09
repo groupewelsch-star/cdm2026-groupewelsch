@@ -6,7 +6,11 @@
 <title>🚀 Booster Final – Groupe Welsch</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a1628; color: #e8edf5; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 24px 16px 100px; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a1628; color: #e8edf5; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 0 0 100px; }
+  .nav-bar { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: #070f1e; border-bottom: 1px solid #1e3356; width: 100%; }
+  .nav-logo { font-size: 13px; font-weight: 700; color: #d4af37; }
+  .nav-menu-btn { display: flex; align-items: center; gap: 6px; background: #1a2f50; border: 1px solid #2a4a7a; color: #8ba0bf; font-size: 12px; font-weight: 600; border-radius: 20px; padding: 7px 14px; text-decoration: none; }
+  .content { display: flex; flex-direction: column; align-items: center; padding: 0 16px; width: 100%; }
 
   .hero { text-align: center; padding: 32px 0 24px; width: 100%; max-width: 480px; }
   .hero-badge { display: inline-block; background: linear-gradient(90deg, #d4af37, #f0d060); color: #0a1628; font-size: 11px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; padding: 5px 16px; border-radius: 20px; margin-bottom: 14px; }
@@ -64,6 +68,12 @@
 </head>
 <body>
 
+<div class="nav-bar">
+  <div class="nav-logo">🏆 CDM 2026</div>
+  <a class="nav-menu-btn" href="index.html">☰ Menu</a>
+</div>
+
+<div class="content">
 <div class="hero">
   <div class="hero-badge">🚀 Booster Final</div>
   <div class="hero-brand">Groupe Welsch · La Finale</div>
@@ -200,13 +210,13 @@ function setResult(r) {
 async function verifyEmail() {
   const raw = document.getElementById('emailInput').value.trim().toLowerCase();
   const email = raw + '@groupewelsch.fr';
-  if (!raw) { showToast('Saisis ton identifiant', 'error'); return; }
+  if (!raw) { showToast("Saisis ton identifiant", "error"); return; }
 
   const res = await fetch(`${SUPABASE_URL}/rest/v1/scores?email=eq.${encodeURIComponent(email)}&select=pseudo,total_points,points_phase1,points_phase2`, {
     headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
   });
   const data = await res.json();
-  if (!data.length) { showToast('❌ Email non trouvé. Vérifie ton identifiant.', 'error'); return; }
+  if (!data.length) { showToast("❌ Email non trouvé. Vérifie ton identifiant.", "error"); return; }
 
   currentEmail = email;
   currentPseudo = data[0].pseudo;
@@ -239,7 +249,7 @@ async function submitBooster() {
   if (!currentEmail) { showToast('Vérifie ton identifiant dabord', 'error'); return; }
   const t1 = document.getElementById('team1').value;
   const t2 = document.getElementById('team2').value;
-  if (!t1 || !t2) { showToast('Choisis les deux équipes finalistes', 'error'); return; }
+  if (!t1 || !t2) { showToast("Choisis les deux équipes finalistes", "error"); return; }
 
   const s1 = document.getElementById('score1').value;
   const s2 = document.getElementById('score2').value;
@@ -261,15 +271,16 @@ async function submitBooster() {
   });
 
   if (res.ok) {
-    showToast('🚀 Booster enregistré !');
+    showToast("🚀 Booster enregistré !");
   } else {
     const err = await res.text();
     console.error(err);
-    showToast('❌ Erreur d'envoi. Réessaie.', 'error');
+    showToast("❌ Erreur d'envoi. Réessaie.", "error");
   }
 }
 
 checkDeadline();
 </script>
+</div>
 </body>
 </html>
