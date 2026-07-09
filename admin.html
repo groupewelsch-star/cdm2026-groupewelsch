@@ -188,6 +188,40 @@
       <div id="matchsAdminP4"></div>
     </div>
 
+    <div class="phase-toggle active" onclick="toggleSection('boosterBody','chevBooster')">
+      <div><div class="phase-toggle-title">🚀 Booster · La Finale</div><div class="phase-toggle-sub">Résultat de la finale pour calcul des points</div></div>
+      <span class="phase-toggle-chevron open" id="chevBooster">›</span>
+    </div>
+    <div class="phase-body open" id="boosterBody">
+      <div style="padding:16px;background:#0f1e35;border-radius:12px;margin:8px 0">
+        <div style="font-size:13px;color:#8ba0bf;margin-bottom:12px;font-weight:600">🏆 Équipes finalistes réelles</div>
+        <div style="display:flex;gap:10px;margin-bottom:12px">
+          <select id="boosterTeam1" style="flex:1;background:#162b47;border:1px solid #2a4a6a;border-radius:8px;padding:10px;color:#e8edf5;font-size:13px">
+            <option value="">Équipe 1</option>
+            <option>France</option><option>Maroc</option><option>Espagne</option><option>Belgique</option>
+          </select>
+          <select id="boosterTeam2" style="flex:1;background:#162b47;border:1px solid #2a4a6a;border-radius:8px;padding:10px;color:#e8edf5;font-size:13px">
+            <option value="">Équipe 2</option>
+            <option>Norvège</option><option>Angleterre</option><option>Argentine</option><option>Suisse</option>
+          </select>
+        </div>
+        <div style="font-size:13px;color:#8ba0bf;margin-bottom:8px;font-weight:600">⚽ Score final</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <input type="number" id="boosterScore1" min="0" max="20" placeholder="?" style="width:70px;background:#162b47;border:1px solid #2a4a6a;border-radius:8px;padding:10px;color:#fff;font-size:18px;text-align:center">
+          <span style="color:#5a7a9a;font-weight:700">–</span>
+          <input type="number" id="boosterScore2" min="0" max="20" placeholder="?" style="width:70px;background:#162b47;border:1px solid #2a4a6a;border-radius:8px;padding:10px;color:#fff;font-size:18px;text-align:center">
+          <select id="boosterResult" style="flex:1;background:#162b47;border:1px solid #2a4a6a;border-radius:8px;padding:10px;color:#e8edf5;font-size:13px">
+            <option value="">Vainqueur</option>
+            <option value="1">Équipe 1 gagne</option>
+            <option value="N">Match nul</option>
+            <option value="2">Équipe 2 gagne</option>
+          </select>
+        </div>
+        <button onclick="calcBooster()" style="width:100%;background:#d4af37;color:#0a1628;border:none;border-radius:8px;padding:12px;font-size:13px;font-weight:700;cursor:pointer">🚀 Calculer les points Booster</button>
+        <div id="boosterResult2" style="margin-top:10px;font-size:12px;color:#5a7a9a"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -520,6 +554,57 @@ function renderMatchsAdmin() {
     p4block.appendChild(row);
   });
   p4container.appendChild(p4block);
+}
+
+async function calcBooster() {
+  const t1 = document.getElementById('boosterTeam1').value;
+  const t2 = document.getElementById('boosterTeam2').value;
+  const s1 = parseInt(document.getElementById('boosterScore1').value);
+  const s2 = parseInt(document.getElementById('boosterScore2').value);
+  const result = document.getElementById('boosterResult').value;
+
+  if (!t1 || !t2) { showToast('⚠️ Choisis les deux équipes finalistes', 'error'); return; }
+
+  // Load all booster pronos
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/pronostics?phase=eq.5`, {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+  });
+  const pronos = await res.json();
+
+  let updated = 0;
+  for (const p of pronos) {
+    const prono = (p.pronos || {}).FINAL || {};
+    let pts = 0;
+    const pt1 = prono.team1 === t1;
+    const pt2 = prono.team2 === t2;
+    // 1 bonne équipe = 3pts, les 2 = 6pts
+    if (pt1 && pt2) pts += 6;
+    else if (pt1 || pt2) pts += 3;
+    // Score exact + bon résultat = +4pts
+    if (!isNaN(s1) && !isNaN(s2) && prono.score1 === s1 && prono.score2 === s2 && prono.result === result) pts += 4;
+
+    if (pts > 0) {
+      // Add to points_phase2 (cumul)
+      const scRes = await fetch(`${SUPABASE_URL}/rest/v1/scores?email=eq.${encodeURIComponent(p.email)}&select=points_phase1,points_phase2,total_points`, {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+      });
+      const sc = await scRes.json();
+      if (sc.length) {
+        const newP2 = (sc[0].points_phase2 || 0) + pts;
+        const newTotal = (sc[0].points_phase1 || 0) + newP2;
+        await fetch(`${SUPABASE_URL}/rest/v1/scores?email=eq.${encodeURIComponent(p.email)}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ points_phase2: newP2, total_points: newTotal, last_updated: new Date().toISOString() })
+        });
+        updated++;
+      }
+    }
+  }
+
+  document.getElementById('boosterResult2').textContent = `✅ ${updated} participants ont gagné des points booster.`;
+  showToast('🚀 Points booster calculés !');
+  await loadParticipants();
 }
 
 async function saveMatch(btn) {

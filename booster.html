@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🚀 Booster Final – Groupe Welsch</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a1628; color: #e8edf5; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 24px 16px 100px; }
+
+  .hero { text-align: center; padding: 32px 0 24px; width: 100%; max-width: 480px; }
+  .hero-badge { display: inline-block; background: linear-gradient(90deg, #d4af37, #f0d060); color: #0a1628; font-size: 11px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; padding: 5px 16px; border-radius: 20px; margin-bottom: 14px; }
+  .hero-brand { font-size: clamp(22px, 5vw, 30px); font-weight: 900; color: #fff; margin-bottom: 6px; }
+  .hero-sub { font-size: 13px; color: #8ba0bf; }
+
+  .info-box { background: #0f1e35; border: 1px solid #d4af3740; border-radius: 14px; padding: 16px 20px; margin: 0 auto 24px; max-width: 480px; width: 100%; }
+  .info-box-title { font-size: 13px; font-weight: 700; color: #d4af37; margin-bottom: 10px; }
+  .info-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid #1a2f50; font-size: 13px; }
+  .info-row:last-child { border-bottom: none; }
+  .info-pts { margin-left: auto; font-weight: 800; color: #d4af37; font-size: 15px; }
+  .deadline { text-align: center; font-size: 12px; color: #e07070; margin-top: 10px; font-weight: 600; }
+
+  .login-card { background: #0f1e35; border: 1px solid #1e3356; border-radius: 16px; padding: 20px; margin: 0 auto 20px; max-width: 480px; width: 100%; }
+  .login-label { font-size: 12px; color: #5a7a9a; margin-bottom: 8px; }
+  .login-row { display: flex; gap: 8px; }
+  .login-input { flex: 1; background: #162b47; border: 1px solid #2a4a6a; border-radius: 10px; padding: 10px 14px; color: #e8edf5; font-size: 14px; outline: none; }
+  .login-suffix { background: #162b47; border: 1px solid #2a4a6a; border-radius: 10px; padding: 10px 12px; color: #5a7a9a; font-size: 13px; white-space: nowrap; display: flex; align-items: center; }
+  .btn-verify { background: #d4af37; color: #0a1628; border: none; border-radius: 10px; padding: 10px 18px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+  .recap-card { background: #0d3320; border: 1px solid #1a6a40; border-radius: 12px; padding: 14px 18px; margin-top: 12px; display: none; }
+  .recap-name { font-size: 15px; font-weight: 700; color: #4ade80; }
+  .recap-pts { font-size: 12px; color: #5a9a70; margin-top: 3px; }
+
+  .prono-card { background: #0f1e35; border: 1px solid #1e3356; border-radius: 16px; padding: 20px; margin: 0 auto 16px; max-width: 480px; width: 100%; }
+  .prono-title { font-size: 13px; font-weight: 700; color: #8ba0bf; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+  .final-vs { text-align: center; font-size: 18px; font-weight: 900; color: #fff; margin-bottom: 20px; }
+
+  .team-select-block { margin-bottom: 16px; }
+  .team-label { font-size: 12px; color: #5a7a9a; margin-bottom: 8px; font-weight: 600; }
+  .team-select { width: 100%; background: #162b47; border: 1px solid #2a4a6a; border-radius: 10px; padding: 12px 14px; color: #e8edf5; font-size: 14px; outline: none; appearance: none; cursor: pointer; }
+  .team-select:focus { border-color: #d4af37; }
+
+  .score-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid #1e3356; }
+  .score-label { font-size: 12px; color: #5a7a9a; margin-bottom: 12px; font-weight: 600; text-align: center; }
+  .score-row { display: flex; align-items: center; justify-content: center; gap: 12px; }
+  .score-team { font-size: 12px; color: #8ba0bf; text-align: center; flex: 1; }
+  .score-input { width: 64px; height: 56px; background: #162b47; border: 2px solid #2a4a6a; border-radius: 12px; color: #fff; font-size: 22px; font-weight: 700; text-align: center; outline: none; }
+  .score-input:focus { border-color: #d4af37; }
+  .score-dash { font-size: 24px; color: #5a7a9a; font-weight: 700; }
+  .score-hint { font-size: 11px; color: #3a5a7a; text-align: center; margin-top: 8px; }
+
+  .result-btns { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
+  .result-btn { flex: 1; max-width: 80px; padding: 10px; background: #162b47; border: 2px solid #2a4a6a; border-radius: 10px; color: #8ba0bf; font-size: 13px; font-weight: 700; cursor: pointer; text-align: center; transition: all 0.15s; }
+  .result-btn.active { background: #0d3320; border-color: #4ade80; color: #4ade80; }
+
+  .submit-btn { position: fixed; bottom: 0; left: 0; right: 0; background: linear-gradient(90deg, #d4af37, #f0d060); color: #0a1628; border: none; padding: 20px; font-size: 16px; font-weight: 800; cursor: pointer; letter-spacing: 0.5px; display: none; }
+  .submit-btn:active { opacity: 0.85; }
+
+  .locked-banner { background: #1a0f0f; border: 1px solid #6a2020; border-radius: 12px; padding: 14px 18px; text-align: center; font-size: 13px; color: #e07070; margin: 0 auto 20px; max-width: 480px; width: 100%; display: none; }
+
+  .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #1a3a20; color: #4ade80; padding: 12px 24px; border-radius: 30px; font-size: 14px; font-weight: 600; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 999; white-space: nowrap; }
+  .toast.error { background: #3a1010; color: #e07070; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-badge">🚀 Booster Final</div>
+  <div class="hero-brand">Groupe Welsch · La Finale</div>
+  <div class="hero-sub">Pronostique les deux finalistes et le score</div>
+</div>
+
+<div class="info-box" style="max-width:480px">
+  <div class="info-box-title">💎 Comment ça marche ?</div>
+  <div class="info-row">🎯 1 équipe finaliste trouvée <span class="info-pts">+3 pts</span></div>
+  <div class="info-row">🎯🎯 Les 2 équipes finalistes trouvées <span class="info-pts">+6 pts</span></div>
+  <div class="info-row">⚽ Score exact en plus <span class="info-pts">+4 pts</span></div>
+  <div class="info-row" style="background:#d4af3710;border-radius:8px;padding:8px 6px;border:none">🏆 Maximum booster <span class="info-pts" style="color:#f0d060">10 pts</span></div>
+  <div class="deadline">⏰ Pronostics ouverts jusqu'au 9 juillet à 20h00</div>
+</div>
+
+<div class="locked-banner" id="lockedBanner">
+  🔒 Les pronostics booster sont clôturés.
+</div>
+
+<div class="login-card">
+  <div class="login-label">🔗 Ton identifiant (même qu'en phase de poules)</div>
+  <div class="login-row">
+    <input class="login-input" id="emailInput" type="text" placeholder="prenom.nom" autocomplete="off" autocapitalize="none">
+    <div class="login-suffix">@groupewelsch.fr</div>
+  </div>
+  <button class="btn-verify" onclick="verifyEmail()" style="width:100%;margin-top:10px">🔍 Vérifier mon identifiant</button>
+  <div class="recap-card" id="recapCard">
+    <div class="recap-name" id="recapName"></div>
+    <div class="recap-pts" id="recapPts"></div>
+  </div>
+</div>
+
+<div class="prono-card" id="pronoCard" style="display:none">
+  <div class="prono-title">🏆 Pronostique la finale</div>
+
+  <div class="team-select-block">
+    <div class="team-label">Équipe 1 (vainqueur QF France/Maroc ou Espagne/Belgique)</div>
+    <select class="team-select" id="team1" onchange="updateVs()">
+      <option value="">— Choisir l'équipe 1 —</option>
+      <option value="France">🇫🇷 France</option>
+      <option value="Maroc">🇲🇦 Maroc</option>
+      <option value="Espagne">🇪🇸 Espagne</option>
+      <option value="Belgique">🇧🇪 Belgique</option>
+    </select>
+  </div>
+
+  <div class="team-select-block">
+    <div class="team-label">Équipe 2 (vainqueur QF Norvège/Angleterre ou Argentine/Suisse)</div>
+    <select class="team-select" id="team2" onchange="updateVs()">
+      <option value="">— Choisir l'équipe 2 —</option>
+      <option value="Norvège">🇳🇴 Norvège</option>
+      <option value="Angleterre">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Angleterre</option>
+      <option value="Argentine">🇦🇷 Argentine</option>
+      <option value="Suisse">🇨🇭 Suisse</option>
+    </select>
+  </div>
+
+  <div class="final-vs" id="finalVs" style="color:#3a5a7a">? vs ?</div>
+
+  <div class="score-section">
+    <div class="score-label">Score de la finale (optionnel · +4 pts si exact)</div>
+    <div class="score-row">
+      <div class="score-team" id="scoreTeam1">Équipe 1</div>
+      <input class="score-input" type="number" min="0" max="20" id="score1" placeholder="?">
+      <span class="score-dash">–</span>
+      <input class="score-input" type="number" min="0" max="20" id="score2" placeholder="?">
+      <div class="score-team" id="scoreTeam2">Équipe 2</div>
+    </div>
+    <div class="result-btns">
+      <button class="result-btn" id="btn1" onclick="setResult('1')">Équipe 1</button>
+      <button class="result-btn" id="btnN" onclick="setResult('N')">Nul</button>
+      <button class="result-btn" id="btn2" onclick="setResult('2')">Équipe 2</button>
+    </div>
+    <div class="score-hint">Sélectionne aussi le vainqueur</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<button class="submit-btn" id="submitBtn" onclick="submitBooster()">🚀 Envoyer mon Booster</button>
+
+<script>
+const SUPABASE_URL = 'https://fafqylzoegiuvzqjfeea.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZhZnF5bHpvZWdpdXZ6cWpmZWVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExNzQxMDQsImV4cCI6MjA5Njc1MDEwNH0.T3YxIsSMTyVoXvcM2jq5cPWBPGuUVKY8Ss4vvLyLzd8';
+const DEADLINE = new Date('2026-07-09T18:00:00Z'); // 20h Paris = 18h UTC
+
+let currentEmail = '';
+let currentPseudo = '';
+let selectedResult = '';
+let isLocked = false;
+
+function checkDeadline() {
+  if (new Date() >= DEADLINE) {
+    isLocked = true;
+    document.getElementById('lockedBanner').style.display = 'block';
+    document.getElementById('submitBtn').style.display = 'none';
+  }
+}
+
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type === 'error' ? ' error' : '');
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+function updateVs() {
+  const t1 = document.getElementById('team1').value;
+  const t2 = document.getElementById('team2').value;
+  const vsEl = document.getElementById('finalVs');
+  const st1 = document.getElementById('scoreTeam1');
+  const st2 = document.getElementById('scoreTeam2');
+  if (t1 && t2) {
+    vsEl.textContent = t1 + ' vs ' + t2;
+    vsEl.style.color = '#fff';
+    st1.textContent = t1;
+    st2.textContent = t2;
+    document.getElementById('submitBtn').style.display = isLocked ? 'none' : 'block';
+  } else {
+    vsEl.textContent = (t1 || '?') + ' vs ' + (t2 || '?');
+    vsEl.style.color = '#3a5a7a';
+    st1.textContent = t1 || 'Équipe 1';
+    st2.textContent = t2 || 'Équipe 2';
+    document.getElementById('submitBtn').style.display = 'none';
+  }
+}
+
+function setResult(r) {
+  selectedResult = r;
+  ['btn1','btnN','btn2'].forEach(id => document.getElementById(id).classList.remove('active'));
+  const map = {'1':'btn1','N':'btnN','2':'btn2'};
+  if (map[r]) document.getElementById(map[r]).classList.add('active');
+}
+
+async function verifyEmail() {
+  const raw = document.getElementById('emailInput').value.trim().toLowerCase();
+  const email = raw + '@groupewelsch.fr';
+  if (!raw) { showToast('Saisis ton identifiant', 'error'); return; }
+
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/scores?email=eq.${encodeURIComponent(email)}&select=pseudo,total_points,points_phase1,points_phase2`, {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+  });
+  const data = await res.json();
+  if (!data.length) { showToast('❌ Email non trouvé. Vérifie ton identifiant.', 'error'); return; }
+
+  currentEmail = email;
+  currentPseudo = data[0].pseudo;
+  const total = data[0].total_points || 0;
+
+  document.getElementById('recapName').textContent = currentPseudo + ' ✅';
+  document.getElementById('recapPts').textContent = `Total actuel : ${total} pts · Le booster s'ajoutera`;
+  document.getElementById('recapCard').style.display = 'block';
+
+  // Load existing booster prono
+  const res2 = await fetch(`${SUPABASE_URL}/rest/v1/pronostics?email=eq.${encodeURIComponent(email)}&phase=eq.5&select=pronos`, {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+  });
+  const d2 = await res2.json();
+  if (d2.length && d2[0].pronos) {
+    const p = d2[0].pronos;
+    if (p.team1) document.getElementById('team1').value = p.team1;
+    if (p.team2) document.getElementById('team2').value = p.team2;
+    if (p.score1 !== undefined && p.score1 !== '') document.getElementById('score1').value = p.score1;
+    if (p.score2 !== undefined && p.score2 !== '') document.getElementById('score2').value = p.score2;
+    if (p.result) setResult(p.result);
+    updateVs();
+  }
+
+  document.getElementById('pronoCard').style.display = 'block';
+  if (!isLocked) updateVs();
+}
+
+async function submitBooster() {
+  if (!currentEmail) { showToast('Vérifie ton identifiant d'abord', 'error'); return; }
+  const t1 = document.getElementById('team1').value;
+  const t2 = document.getElementById('team2').value;
+  if (!t1 || !t2) { showToast('Choisis les deux équipes finalistes', 'error'); return; }
+
+  const s1 = document.getElementById('score1').value;
+  const s2 = document.getElementById('score2').value;
+
+  const pronos = {
+    FINAL: {
+      team1: t1,
+      team2: t2,
+      score1: s1 !== '' ? parseInt(s1) : null,
+      score2: s2 !== '' ? parseInt(s2) : null,
+      result: selectedResult || null
+    }
+  };
+
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/upsert_pronostics_phase5`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+    body: JSON.stringify({ p_email: currentEmail, p_pronos: pronos, p_pseudo: currentPseudo })
+  });
+
+  if (res.ok) {
+    showToast('🚀 Booster enregistré !');
+  } else {
+    const err = await res.text();
+    console.error(err);
+    showToast('❌ Erreur d'envoi. Réessaie.', 'error');
+  }
+}
+
+checkDeadline();
+</script>
+</body>
+</html>
