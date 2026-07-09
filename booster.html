@@ -89,6 +89,13 @@
   <div class="deadline">⏰ Pronostics ouverts jusqu'au 9 juillet à 20h00</div>
 </div>
 
+<div id="participationBox" style="background:#0f1e35;border:1px solid #1e3356;border-radius:14px;padding:16px 20px;margin:0 auto 20px;max-width:480px;width:100%;display:none">
+  <div style="font-size:12px;font-weight:700;color:#4ade80;margin-bottom:10px">✅ ONT PRONOSTIQUÉ (<span id="countDone">0</span>)</div>
+  <div id="listDone" style="font-size:13px;color:#8ba0bf;line-height:1.8"></div>
+  <div style="font-size:12px;font-weight:700;color:#e07070;margin:12px 0 8px">❌ N'ONT PAS ENCORE PRONOSTIQUÉ (<span id="countMissing">0</span>)</div>
+  <div id="listMissing" style="font-size:13px;color:#5a7a9a;line-height:1.8"></div>
+</div>
+
 <div class="locked-banner" id="lockedBanner">
   🔒 Les pronostics booster sont clôturés.
 </div>
@@ -280,6 +287,26 @@ async function submitBooster() {
 }
 
 checkDeadline();
+
+// Load participation
+(async () => {
+  try {
+    const [r1, r2] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/pronostics?phase=eq.5&select=email,pseudo`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+      fetch(`${SUPABASE_URL}/rest/v1/scores?select=email,pseudo`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
+    ]);
+    const done = await r1.json();
+    const all = await r2.json();
+    const doneEmails = new Set(done.map(d => d.email));
+    const missing = all.filter(s => !doneEmails.has(s.email));
+    
+    document.getElementById('countDone').textContent = done.length;
+    document.getElementById('countMissing').textContent = missing.length;
+    document.getElementById('listDone').textContent = done.map(d => d.pseudo).join(' · ') || '—';
+    document.getElementById('listMissing').textContent = missing.map(s => s.pseudo).join(' · ') || '—';
+    document.getElementById('participationBox').style.display = 'block';
+  } catch(e) {}
+})();
 </script>
 </div>
 </body>
