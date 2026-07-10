@@ -77,6 +77,8 @@
   .phase-section-body { display: none; padding-top: 8px; }
   .phase-section-body.open { display: block; }
 
+  .detail-tab { background:#1a2f50;border:1px solid #2a4a7a;color:#8ba0bf;font-size:11px;font-weight:600;border-radius:16px;padding:5px 12px;cursor:pointer;-webkit-tap-highlight-color:transparent; }
+  .detail-tab.active { background:#d4af37;border-color:#d4af37;color:#0a1628; }
   .loading { text-align: center; padding: 40px; color: #5a7a9a; }
   .spinner { width: 32px; height: 32px; border: 3px solid #1e3356; border-top-color: #d4af37; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -204,6 +206,11 @@
           <div class="detail-score" id="detailScore"></div>
         </div>
         <button class="detail-close" onclick="closeDetail()">✕</button>
+      </div>
+      <div style="display:flex;gap:6px;padding:10px 16px;background:#0a1628;border-bottom:1px solid #1e3356">
+        <button class="detail-tab active" id="dtab_total" onclick="switchDetailTab('total')">🌍 Total</button>
+        <button class="detail-tab" id="dtab_p1" onclick="switchDetailTab('p1')">⚽ Poules</button>
+        <button class="detail-tab" id="dtab_p2" onclick="switchDetailTab('p2')">⚡ Phases finales</button>
       </div>
       <div class="detail-summary" id="detailSummary"></div>
     </div>
@@ -505,6 +512,8 @@ async function showDetail(email) {
 
   const pronos = participant.pronos || {};
   const stats = { nb3: 0, nb1: 0, nb0: 0, pts2: 0, pts2_8: 0, pts2_16: 0, pts1: 0 };
+  // Per-phase stats for tab switching
+  window._detailStats = { total: null, p1: null, p2: null };
 
   // === PHASE 4 - Quarts (ouvert par défaut) ===
   let p4HTML = '';
@@ -596,14 +605,51 @@ async function showDetail(email) {
   const computedP234 = stats.pts2 + stats.pts2_8 + stats.pts2_16;
   const computedTotal = stats.pts1 + computedP234;
   document.getElementById('detailScore').textContent = `${computedTotal} pts total · ${stats.pts1} pts P1 · ${computedP234} pts P2+3+4`;
-  document.getElementById('detailSummary').innerHTML = `
-    <div class="detail-sum-item"><div class="detail-sum-val" style="color:#d4af37">${stats.nb3}</div><div class="detail-sum-lbl">Scores exacts</div></div>
-    <div class="detail-sum-item"><div class="detail-sum-val" style="color:#2ea55a">${stats.nb1}</div><div class="detail-sum-lbl">Bons résultats</div></div>
-    <div class="detail-sum-item"><div class="detail-sum-val" style="color:#3a5a7a">${stats.nb0}</div><div class="detail-sum-lbl">Ratés</div></div>
-    <div class="detail-sum-item"><div class="detail-sum-val">${scoreData.total_points}</div><div class="detail-sum-lbl">Points total</div></div>
-  `;
+
+  // Build per-phase body sections
+  window._detailBodyP1 = p1HTML ? `<div class="phase-section"><div class="phase-section-header" onclick="toggleSection('p1only')"><div><div class="phase-section-title">⚽ Phase de poules</div><div class="phase-section-pts">${stats.pts1} pts</div></div><span class="phase-section-chevron open" id="chevron_p1only">›</span></div><div class="phase-section-body open" id="p1only">${p1HTML}</div></div>` : '';
+  window._detailBodyP2 = (p4HTML ? `<div class="phase-section"><div class="phase-section-header phase2" onclick="toggleSection('p4only')"><div><div class="phase-section-title">🏆 Quarts de finale</div><div class="phase-section-pts">${stats.pts2} pts</div></div><span class="phase-section-chevron open" id="chevron_p4only">›</span></div><div class="phase-section-body open" id="p4only">${p4HTML}</div></div>` : '') +
+    (p3HTML ? `<div class="phase-section"><div class="phase-section-header phase2" onclick="toggleSection('p3only')"><div><div class="phase-section-title">🔥 8es de finale</div><div class="phase-section-pts">${stats.pts2_8} pts</div></div><span class="phase-section-chevron open" id="chevron_p3only">›</span></div><div class="phase-section-body open" id="p3only">${p3HTML}</div></div>` : '') +
+    (p2HTML ? `<div class="phase-section"><div class="phase-section-header phase2" onclick="toggleSection('p2only')"><div><div class="phase-section-title">⚡ 16es de finale</div><div class="phase-section-pts">${stats.pts2_16} pts</div></div><span class="phase-section-chevron open" id="chevron_p2only">›</span></div><div class="phase-section-body open" id="p2only">${p2HTML}</div></div>` : '');
+  window._detailBodyTotal = bodyHTML;
+
+  // Per-phase stats for tab switching
+  // We need separate stats - build them from the already computed stats
+  window._detailStats = {
+    total: { nb3: stats.nb3, nb1: stats.nb1, nb0: stats.nb0, pts: computedTotal },
+    p1: { nb3: 0, nb1: 0, nb0: 0, pts: stats.pts1 },
+    p2: { nb3: 0, nb1: 0, nb0: 0, pts: computedP234 }
+  };
+  // Recompute p1 stats separately
+  const statsP1 = { nb3:0, nb1:0, nb0:0 };
+  GROUPS.forEach(g => g.matches.forEach(m => {
+    const prono = pronos[m.id], reel = allResultats[m.id];
+    if (!prono || !reel || reel.home_score === null) return;
+    const pH = parseInt(prono.home), pA = parseInt(prono.away);
+    if (!isNaN(pH) && !isNaN(pA) && pH === reel.home_score && pA === reel.away_score) statsP1.nb3++;
+    else if (prono.result === reel.result) statsP1.nb1++;
+    else statsP1.nb0++;
+  }));
+  window._detailStats.p1 = { nb3: statsP1.nb3, nb1: statsP1.nb1, nb0: statsP1.nb0, pts: stats.pts1 };
+  window._detailStats.p2 = { nb3: stats.nb3 - statsP1.nb3, nb1: stats.nb1 - statsP1.nb1, nb0: stats.nb0 - statsP1.nb0, pts: computedP234 };
+
+  switchDetailTab('total');
 
   document.getElementById('detailOverlay').classList.add('open');
+}
+
+function switchDetailTab(tab) {
+  ['total','p1','p2'].forEach(t => {
+    document.getElementById('dtab_'+t)?.classList.toggle('active', t === tab);
+  });
+  const s = window._detailStats[tab];
+  const body = tab === 'p1' ? window._detailBodyP1 : tab === 'p2' ? window._detailBodyP2 : window._detailBodyTotal;
+  document.getElementById('detailBody').innerHTML = body || '<p style="color:#5a7a9a;font-size:13px;padding:10px">Aucun pronostic.</p>';
+  document.getElementById('detailSummary').innerHTML = `
+    <div class="detail-sum-item"><div class="detail-sum-val" style="color:#d4af37">${s.nb3}</div><div class="detail-sum-lbl">Scores exacts</div></div>
+    <div class="detail-sum-item"><div class="detail-sum-val" style="color:#2ea55a">${s.nb1}</div><div class="detail-sum-lbl">Bons résultats</div></div>
+    <div class="detail-sum-item"><div class="detail-sum-val" style="color:#3a5a7a">${s.nb0}</div><div class="detail-sum-lbl">Ratés</div></div>
+    <div class="detail-sum-item"><div class="detail-sum-val">${s.pts}</div><div class="detail-sum-lbl">Points</div></div>`;
 }
 
 function toggleSection(id) {
