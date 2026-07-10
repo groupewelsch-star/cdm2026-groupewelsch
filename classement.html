@@ -287,10 +287,10 @@ async function loadClassement() {
   btn.classList.add('spinning');
 
   try {
-    // Load scores, pronostics and resultats in parallel
+    // Load scores, pronostics phase 1 and resultats in parallel
     const [resScores, resPronos, resResultats] = await Promise.all([
       fetch(`${SUPABASE_URL}/rest/v1/scores?select=*&order=total_points.desc`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
-      fetch(`${SUPABASE_URL}/rest/v1/pronostics`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+      fetch(`${SUPABASE_URL}/rest/v1/pronostics?phase=eq.1`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
       fetch(`${SUPABASE_URL}/rest/v1/resultats`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
     ]);
     allScores = await resScores.json();
@@ -583,7 +583,7 @@ async function showDetail(email) {
   if (p1HTML) {
     bodyHTML += `<div class="phase-section">
       <div class="phase-section-header" onclick="toggleSection('p1section')">
-        <div><div class="phase-section-title">⚽ Phase de poules</div><div class="phase-section-pts">${scoreData.points_phase1} pts</div></div>
+        <div><div class="phase-section-title">⚽ Phase de poules</div><div class="phase-section-pts">${stats.pts1} pts</div></div>
         <span class="phase-section-chevron" id="chevron_p1section">›</span>
       </div>
       <div class="phase-section-body" id="p1section">${p1HTML}</div>
@@ -592,8 +592,8 @@ async function showDetail(email) {
 
   document.getElementById('detailBody').innerHTML = bodyHTML || '<p style="color:#5a7a9a;font-size:13px;padding:10px">Aucun pronostic trouvé.</p>';
   const computedP234 = stats.pts2 + stats.pts2_8 + stats.pts2_16;
-  const computedTotal = scoreData.points_phase1 + computedP234;
-  document.getElementById('detailScore').textContent = `${computedTotal} pts total · ${scoreData.points_phase1} pts P1 · ${computedP234} pts P2+3+4`;
+  const computedTotal = stats.pts1 + computedP234;
+  document.getElementById('detailScore').textContent = `${computedTotal} pts total · ${stats.pts1} pts P1 · ${computedP234} pts P2+3+4`;
   document.getElementById('detailSummary').innerHTML = `
     <div class="detail-sum-item"><div class="detail-sum-val" style="color:#d4af37">${stats.nb3}</div><div class="detail-sum-lbl">Scores exacts</div></div>
     <div class="detail-sum-item"><div class="detail-sum-val" style="color:#2ea55a">${stats.nb1}</div><div class="detail-sum-lbl">Bons résultats</div></div>
