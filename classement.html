@@ -310,6 +310,7 @@ async function loadClassement() {
 
     // Compute accuracy (% bons pronostics) per participant — Phase 1 uniquement
     accuracyByEmail = {};
+    window._totalBonsByEmail = {};
     pronosticsData.filter(p => (p.phase || 1) === 1).forEach(p => {
       const pronos = p.pronos || {};
       let nbJoues = 0, nbBons = 0;
@@ -326,6 +327,8 @@ async function loadClassement() {
         if (isExact || isGoodResult) nbBons++;
       });
       accuracyByEmail[p.email] = nbJoues > 0 ? Math.round((nbBons / nbJoues) * 100) : 0;
+      // Total bons résultats P1 (sera complété par P2+3+4 dans showDetail)
+      window._totalBonsByEmail[p.email] = nbBons;
     });
 
     // Stats
@@ -365,9 +368,10 @@ function renderRanking() {
 
   let sorted = [...allScores];
   const acc = s => accuracyByEmail[s.email] || 0;
-  if (currentPhase === '1') sorted.sort((a,b) => b.points_phase1 - a.points_phase1 || acc(b) - acc(a));
-  else if (currentPhase === '2') sorted.sort((a,b) => b.points_phase2 - a.points_phase2 || acc(b) - acc(a));
-  else sorted.sort((a,b) => b.total_points - a.total_points || acc(b) - acc(a));
+  const bons = s => window._totalBonsByEmail?.[s.email] || 0;
+  if (currentPhase === '1') sorted.sort((a,b) => b.points_phase1 - a.points_phase1 || bons(b) - bons(a) || b.points_phase2 - a.points_phase2);
+  else if (currentPhase === '2') sorted.sort((a,b) => b.points_phase2 - a.points_phase2 || bons(b) - bons(a) || b.points_phase2 - a.points_phase2);
+  else sorted.sort((a,b) => b.total_points - a.total_points || bons(b) - bons(a) || b.points_phase2 - a.points_phase2);
 
   const getScore = s => currentPhase === '1' ? s.points_phase1 : currentPhase === '2' ? s.points_phase2 : s.total_points;
   const getInitials = name => name.split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2);
