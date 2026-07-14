@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚔️ Demi-finales de finale – Groupe Welsch</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a1628; color: #e8edf5; min-height: 100vh; }
+
+  .sticky-header { position: sticky; top: 0; z-index: 50; }
+  .nav-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: #070f1e; border-bottom: 1px solid #1e3356; }
+  .nav-logo { font-size: 13px; font-weight: 700; color: #d4af37; }
+  .nav-menu-btn { display: flex; align-items: center; gap: 6px; background: #1a2f50; border: 1px solid #2a4a7a; color: #8ba0bf; font-size: 12px; font-weight: 600; border-radius: 20px; padding: 7px 14px; text-decoration: none; -webkit-tap-highlight-color: transparent; }
+
+  .hero { background: linear-gradient(135deg, #0a1628 0%, #1a3a6b 50%, #0a1628 100%); border-bottom: 3px solid #d4af37; padding: 20px 20px 16px; text-align: center; }
+  .hero-badge { display: inline-block; background: #d4af37; color: #0a1628; font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 4px 14px; border-radius: 20px; margin-bottom: 8px; }
+  .hero-brand { font-size: clamp(18px, 4vw, 24px); font-weight: 900; color: #fff; margin-bottom: 2px; }
+  .hero-sub { font-size: 12px; color: #8ba0bf; }
+  .hero-note { margin-top: 10px; display: inline-block; background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.3); border-radius: 8px; padding: 7px 12px; font-size: 11px; color: #c4a847; line-height: 1.5; }
+
+  .rules { display: flex; justify-content: center; gap: 12px; padding: 12px 20px; background: #0f1e35; border-bottom: 1px solid #1e3356; flex-wrap: wrap; }
+  .rule-chip { display: flex; align-items: center; gap: 8px; background: #1a2f50; border: 1px solid #2a4a7a; border-radius: 30px; padding: 5px 12px; font-size: 12px; }
+  .rule-chip .pts { background: #d4af37; color: #0a1628; font-weight: 800; font-size: 13px; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
+
+  /* IDENTITY */
+  .identity-section { max-width: 500px; margin: 20px auto; padding: 0 16px; }
+  .identity-card { background: #0f1e35; border: 1px solid #1e3356; border-radius: 14px; padding: 18px; }
+  .identity-card h2 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .identity-card p { font-size: 12px; color: #5a7a9a; margin-bottom: 14px; }
+  .field-label { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #8ba0bf; margin-bottom: 6px; display: block; }
+  .email-row { display: flex; align-items: center; background: #1a2f50; border: 2px solid #2a4a7a; border-radius: 10px; overflow: hidden; transition: border-color 0.2s; }
+  .email-row:focus-within { border-color: #d4af37; }
+  .email-input { flex: 1; background: transparent; border: none; color: #fff; font-size: 15px; font-weight: 600; padding: 12px 12px; outline: none; }
+  .email-input::placeholder { color: #4a6080; }
+  .email-suffix { background: #0f2245; color: #8ba0bf; font-size: 12px; font-weight: 600; padding: 12px 12px; white-space: nowrap; border-left: 1px solid #2a4a7a; }
+
+  .verify-btn { width: 100%; margin-top: 12px; background: linear-gradient(135deg, #d4af37, #b8942e); color: #0a1628; border: none; border-radius: 10px; font-size: 15px; font-weight: 800; padding: 13px; cursor: pointer; }
+  .verify-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .phase1-recap { background: rgba(46,165,90,0.1); border: 1px solid rgba(46,165,90,0.3); border-radius: 10px; padding: 12px 16px; margin-top: 12px; display: none; }
+  .phase1-recap .recap-name { font-size: 16px; font-weight: 900; color: #fff; }
+  .phase1-recap .recap-pts { font-size: 13px; color: #7fdc9f; margin-top: 2px; }
+
+  /* MATCHS */
+  .content { max-width: 580px; margin: 0 auto; padding: 0 16px 120px; }
+  .section-title { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #5a7a9a; margin: 20px 0 10px; padding-left: 4px; }
+
+  .match-block { background: #0f1e35; border: 1px solid #1e3356; border-radius: 14px; margin-bottom: 10px; overflow: hidden; }
+  .match-block.locked { opacity: 0.6; }
+  .match-block.locked .match-header { background: #0a0f1a; }
+
+  .match-header { padding: 10px 14px; background: linear-gradient(90deg, #1a3a6b, #0f2245); display: flex; align-items: center; justify-content: space-between; }
+  .match-date-label { font-size: 11px; color: #8ba0bf; font-weight: 600; }
+  .match-lock-badge { font-size: 10px; background: rgba(212,80,80,0.2); border: 1px solid rgba(212,80,80,0.4); color: #e07070; border-radius: 6px; padding: 2px 8px; font-weight: 700; }
+  .match-open-badge { font-size: 10px; background: rgba(46,165,90,0.2); border: 1px solid rgba(46,165,90,0.4); color: #7fdc9f; border-radius: 6px; padding: 2px 8px; font-weight: 700; }
+
+  .match-body { padding: 10px 14px; }
+  .match-teams-row { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; justify-content: center; margin-bottom: 10px; }
+  .team-name { flex: 1; text-align: right; color: #dce8f5; }
+  .team-name.away { text-align: left; }
+  .vs-sep { font-size: 9px; color: #3a5a7a; font-weight: 700; flex-shrink: 0; }
+  .flag { font-size: 18px; flex-shrink: 0; }
+
+  .match-inputs { display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .score-box { width: 42px; height: 42px; background: #1a2f50; border: 2px solid #2a4a7a; border-radius: 8px; color: #fff; font-size: 18px; font-weight: 700; text-align: center; outline: none; transition: border-color 0.2s; -webkit-appearance: none; }
+  .score-box:focus { border-color: #d4af37; background: #1e3a60; }
+  .score-box:disabled { opacity: 0.4; cursor: not-allowed; }
+  .score-dash { color: #4a6a8a; font-weight: 700; font-size: 16px; }
+  .result-btns { display: flex; gap: 4px; }
+  .r-btn { background: #1a2f50; border: 2px solid #2a4a7a; color: #8ba0bf; font-weight: 700; font-size: 13px; border-radius: 6px; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; transition: all 0.15s; }
+  .r-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .r-btn.active-1 { background: #1e6b3a; border-color: #2ea55a; color: #7fdc9f; }
+  .r-btn.active-n { background: #5a4a00; border-color: #d4af37; color: #d4af37; }
+  .r-btn.active-2 { background: #6b1e1e; border-color: #d44a4a; color: #dc9f9f; }
+
+  .save-match-btn { background: #1a3a6b; border: 1px solid #2a5a9b; color: #7fafd9; border-radius: 8px; font-size: 12px; font-weight: 700; padding: 8px 14px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .save-match-btn:active { opacity: 0.8; }
+  .save-match-btn.saved { background: #1e6b3a; border-color: #2ea55a; color: #7fdc9f; }
+
+  .progress-bar { height: 3px; background: #1e3356; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #d4af37, #f0cc55); transition: width 0.4s ease; }
+
+  /* STICKY SUBMIT */
+  .sticky-bar { position: fixed; bottom: 0; left: 0; right: 0; padding: 12px 16px; background: rgba(10,22,40,0.97); border-top: 2px solid #d4af37; z-index: 100; }
+  .btn-submit { width: 100%; background: linear-gradient(135deg, #d4af37, #b8942e); color: #0a1628; border: none; border-radius: 10px; font-size: 15px; font-weight: 800; padding: 15px; cursor: pointer; }
+  .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* SUCCESS */
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(5,12,25,0.95); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+  .overlay.open { display: flex; }
+  .confirm-card { background: #0f1e35; border: 2px solid #d4af37; border-radius: 16px; max-width: 400px; width: 100%; padding: 32px 24px; text-align: center; }
+  .confirm-icon { font-size: 52px; margin-bottom: 16px; }
+  .confirm-card h2 { font-size: 20px; font-weight: 900; color: #fff; margin-bottom: 8px; }
+  .confirm-card p { font-size: 13px; color: #8ba0bf; line-height: 1.6; }
+  .confirm-card .name-highlight { font-size: 18px; font-weight: 700; color: #d4af37; margin: 10px 0; }
+
+  .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); color: #fff; padding: 10px 22px; border-radius: 30px; font-weight: 700; font-size: 13px; z-index: 300; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; }
+
+  .loading-overlay { display: none; position: fixed; inset: 0; background: rgba(5,12,25,0.92); z-index: 250; align-items: center; justify-content: center; flex-direction: column; gap: 16px; }
+  .loading-overlay.open { display: flex; }
+  .spinner { width: 40px; height: 40px; border: 4px solid #1e3356; border-top-color: #d4af37; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="sticky-header">
+  <div class="nav-bar">
+    <div class="nav-logo">🏆 CDM 2026</div>
+    <a class="nav-menu-btn" href="index.html">☰ Menu</a>
+  </div>
+  <div class="hero">
+    <div class="hero-badge">⚡ Phase finale</div>
+    <div class="hero-brand">Groupe Welsch · Demi-finales</div>
+    <div class="hero-sub">Pronostique match par match · Bloqué dès le coup d'envoi</div>
+    <div class="hero-note">🔗 Utilise le même identifiant qu'en phase de poules<br>Tes points s'additionneront automatiquement ✅</div>
+  </div>
+</div>
+
+<div class="rules">
+  <div class="rule-chip"><span class="pts">1</span> pt &nbsp;·&nbsp; Bon résultat 1/N/2</div>
+  <div class="rule-chip"><span class="pts">3</span> pts &nbsp;·&nbsp; Score exact</div>
+</div>
+
+<div class="identity-section">
+  <div class="identity-card">
+    <h2>Ton identifiant Phase 1</h2>
+    <p>Saisis ton email pour retrouver tes points de la phase de poules</p>
+    <label class="field-label">Ton email professionnel</label>
+    <div class="email-row">
+      <input type="text" class="email-input" id="emailPrefix" placeholder="prenom.nom" maxlength="40" autocomplete="off" autocapitalize="off" />
+      <span class="email-suffix">@groupewelsch.fr</span>
+    </div>
+    <button class="verify-btn" id="verifyBtn" onclick="verifyEmail()">🔍 Vérifier mon identifiant</button>
+    <div class="phase1-recap" id="phase1Recap">
+      <div class="recap-name" id="recapName"></div>
+      <div class="recap-pts" id="recapPts"></div>
+    </div>
+  </div>
+</div>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+<div class="content" id="matchesContainer" style="display:none"></div>
+
+<div class="sticky-bar" id="stickyBar" style="display:none">
+  <button class="btn-submit" id="submitBtn" onclick="submitAll()">⚽ Envoyer tous mes pronostics</button>
+</div>
+
+<!-- Success -->
+<div class="overlay" id="successOverlay">
+  <div class="confirm-card">
+    <div class="confirm-icon">🏆</div>
+    <h2>Pronostics enregistrés !</h2>
+    <div class="name-highlight" id="confirmName"></div>
+    <p>Tes pronostics pour les Quarts de finale sont sauvegardés.<br>Les points s'additionneront à tes phases précédentes automatiquement.</p>
+    <button onclick="document.getElementById('successOverlay').classList.remove('open')" style="margin-top:20px;background:#1a2f50;border:1px solid #2a4a7a;color:#8ba0bf;border-radius:10px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;width:100%">✕ Fermer</button>
+  </div>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <p style="color:#8ba0bf;font-size:14px">Vérification...</p>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://fafqylzoegiuvzqjfeea.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZhZnF5bHpvZWdpdXZ6cWpmZWVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExNzQxMDQsImV4cCI6MjA5Njc1MDEwNH0.T3YxIsSMTyVoXvcM2jq5cPWBPGuUVKY8Ss4vvLyLzd8';
+
+// Kickoff times in Paris local time (UTC+2 in summer)
+// Format: ISO string in UTC
+const MATCHES = [
+  { id:'R4_1', date:'14 juil.',  home:'🇫🇷 France',      away:'🇪🇸 Espagne',    kickoff: '2026-07-14T19:00:00Z' },
+  { id:'R4_2', date:'15 juil.',  home:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Angleterre', away:'🇦🇷 Argentine',  kickoff: '2026-07-15T19:00:00Z' },
+];
+
+const state = {};
+let currentEmail = '';
+let currentPseudo = '';
+let existingPhase3Pronos = null;
+
+function shortName(t) { return t.replace(/^[^\s]+\s/, ''); }
+function getFlag(t) { return t.split(' ')[0]; }
+
+function isMatchLocked(kickoff) {
+  return new Date() >= new Date(kickoff);
+}
+
+async function verifyEmail() {
+  const prefix = document.getElementById('emailPrefix').value.trim().toLowerCase();
+  if (!prefix) { showToast('⚠️ Saisis ton identifiant', 'error'); return; }
+  if (!/^[a-z0-9._-]+$/.test(prefix)) { showToast('⚠️ Identifiant invalide', 'error'); return; }
+
+  const email = prefix + '@groupewelsch.fr';
+  document.getElementById('loadingOverlay').classList.add('open');
+
+  try {
+    // Check Phase 1 registration
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/scores?email=eq.${encodeURIComponent(email)}&select=pseudo,total_points,points_phase1,points_phase2`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    const data = await res.json();
+
+    if (!data.length) {
+      document.getElementById('loadingOverlay').classList.remove('open');
+      showToast('❌ Email non trouvé en Phase 1. Vérifie ton identifiant.', 'error');
+      return;
+    }
+
+    currentEmail = email;
+    currentPseudo = data[0].pseudo;
+    const pts1 = data[0].points_phase1;
+    const pts2 = data[0].points_phase2 || 0;
+
+    // Check existing Phase 2 pronos
+    const res2 = await fetch(`${SUPABASE_URL}/rest/v1/pronostics?email=eq.${encodeURIComponent(email)}&phase=eq.6&select=pronos`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    const data2 = await res2.json();
+    if (data2.length) {
+      existingPhase3Pronos = data2[0].pronos || {};
+    }
+
+    document.getElementById('loadingOverlay').classList.remove('open');
+    document.getElementById('recapName').textContent = currentPseudo + ' ✅';
+    document.getElementById('recapPts').textContent = `Total actuel : ${pts1 + pts2} pts (P1+2+3: ${pts1 + pts2}) · Les demies s'ajouteront`;
+    document.getElementById('phase1Recap').style.display = 'block';
+    document.getElementById('verifyBtn').disabled = true;
+    document.getElementById('emailPrefix').disabled = true;
+
+    renderMatches();
+    document.getElementById('matchesContainer').style.display = 'block';
+    document.getElementById('stickyBar').style.display = 'block';
+
+  } catch(e) {
+    document.getElementById('loadingOverlay').classList.remove('open');
+    showToast('❌ Erreur réseau. Réessaie.', 'error');
+  }
+}
+
+function renderMatches() {
+  const container = document.getElementById('matchesContainer');
+  let html = '<div class="section-title">Quarts de finale · Pronostique match par match</div>';
+
+  // Sort by kickoff
+  const sorted = [...MATCHES].sort((a,b) => new Date(a.kickoff) - new Date(b.kickoff));
+
+  sorted.forEach(m => {
+    const locked = isMatchLocked(m.kickoff);
+    const id = m.id;
+    state[id] = { home: '', away: '', result: '', locked };
+
+    // Pre-fill if existing pronos
+    if (existingPhase3Pronos && existingPhase3Pronos[id]) {
+      const p = existingPhase3Pronos[id];
+      state[id].home = p.home || '';
+      state[id].away = p.away || '';
+      state[id].result = p.result || '';
+    }
+
+    const kickoffLocal = new Date(m.kickoff).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const disabledAttr = locked ? 'disabled' : '';
+    const badge = locked
+      ? '<span class="match-lock-badge">🔒 Fermé</span>'
+      : '<span class="match-open-badge">✅ Ouvert</span>';
+
+    const hShort = shortName(m.home);
+    const aShort = shortName(m.away);
+    const hFlag = getFlag(m.home);
+    const aFlag = getFlag(m.away);
+
+    const r = state[id].result;
+    const cls1 = r === '1' ? 'active-1' : '';
+    const clsN = r === 'N' ? 'active-n' : '';
+    const cls2 = r === '2' ? 'active-2' : '';
+
+    html += `
+      <div class="match-block ${locked ? 'locked' : ''}" id="block_${id}">
+        <div class="match-header">
+          <span class="match-date-label">${m.date} · ${kickoffLocal} (Paris)</span>
+          ${badge}
+        </div>
+        <div class="match-body">
+          <div class="match-teams-row">
+            <span class="team-name">${hShort}</span>
+            <span class="flag">${hFlag}</span>
+            <span class="vs-sep">vs</span>
+            <span class="flag">${aFlag}</span>
+            <span class="team-name away">${aShort}</span>
+          </div>
+          <div class="match-inputs">
+            <input class="score-box" type="number" min="0" max="20" placeholder="?" id="h_${id}" value="${state[id].home}" ${disabledAttr} oninput="onScore('${id}','home',this.value)">
+            <span class="score-dash">–</span>
+            <input class="score-box" type="number" min="0" max="20" placeholder="?" id="a_${id}" value="${state[id].away}" ${disabledAttr} oninput="onScore('${id}','away',this.value)">
+            <div class="result-btns">
+              <button class="r-btn ${cls1}" id="r1_${id}" onclick="setResult('${id}','1')" ${disabledAttr}>1</button>
+              <button class="r-btn ${clsN}" id="rn_${id}" onclick="setResult('${id}','N')" ${disabledAttr}>N</button>
+              <button class="r-btn ${cls2}" id="r2_${id}" onclick="setResult('${id}','2')" ${disabledAttr}>2</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  });
+
+  container.innerHTML = html;
+  updateProgress();
+}
+
+function onScore(id, side, val) {
+  if (state[id].locked) return;
+  state[id][side] = val;
+  const h = parseInt(state[id].home), a = parseInt(state[id].away);
+  if (!isNaN(h) && !isNaN(a)) setResult(id, h > a ? '1' : a > h ? '2' : 'N');
+  updateProgress();
+}
+
+function setResult(id, r) {
+  if (state[id].locked) return;
+  state[id].result = r;
+  ['1','N','2'].forEach(x => {
+    const el = document.getElementById(`r${x==='N'?'n':x}_${id}`);
+    if (el) { el.className = 'r-btn'; if (r===x) el.classList.add(x==='1'?'active-1':x==='N'?'active-n':'active-2'); }
+  });
+  updateProgress();
+}
+
+function updateProgress() {
+  const unlocked = Object.values(state).filter(s => !s.locked);
+  const filled = unlocked.filter(s => s.result).length;
+  const pct = unlocked.length > 0 ? (filled / unlocked.length * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+async function submitAll() {
+  if (!currentEmail) { showToast('⚠️ Vérifie ton identifiant d\'abord', 'error'); return; }
+
+  // Build pronos object — merge with existing to preserve locked match pronostics
+  const pronos = Object.assign({}, existingPhase3Pronos || {});
+  Object.keys(state).forEach(id => {
+    if (!state[id].locked) {
+      pronos[id] = { home: state[id].home, away: state[id].away, result: state[id].result };
+    }
+  });
+
+  const filled = Object.values(pronos).filter(p => p.result).length;
+  if (filled === 0) { showToast('⚠️ Remplis au moins un pronostic', 'error'); return; }
+
+  document.getElementById('loadingOverlay').classList.add('open');
+
+  try {
+    // Call SQL function to upsert and merge pronos
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/upsert_pronostics_phase6`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+      body: JSON.stringify({ p_email: currentEmail, p_pseudo: currentPseudo, p_pronos: pronos })
+    });
+
+    document.getElementById('loadingOverlay').classList.remove('open');
+
+    if (!res.ok) { showToast('❌ Erreur d\'envoi. Réessaie.', 'error'); return; }
+
+    document.getElementById('confirmName').textContent = currentPseudo + ' 🎉';
+    document.getElementById('successOverlay').classList.add('open');
+    existingPhase3Pronos = pronos;
+
+  } catch(e) {
+    document.getElementById('loadingOverlay').classList.remove('open');
+    showToast('❌ Erreur réseau. Réessaie.', 'error');
+  }
+}
+
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = type === 'error' ? '#d44040' : '#2ea55a';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Auto-refresh lock status every minute
+setInterval(() => {
+  if (currentEmail) renderMatches();
+}, 60000);
+</script>
+</body>
+</html>

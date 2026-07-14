@@ -149,8 +149,16 @@ const MATCHES_P4 = [
   {id:'R3_4', date:'12 juil.',  home:'Argentine',  away:'Suisse',      group:'QF'},
 ];
 
+const MATCHES_P6 = [
+  {id:'R4_1', date:'14 juil.',  home:'France',      away:'Espagne',    group:'1/2'},
+  {id:'R4_2', date:'15 juil.',  home:'Angleterre',  away:'Argentine',  group:'1/2'},
+];
+
 function findMatch(matchId) {
-  // Check Phase 4 (QF) first
+  // Check Phase 6 (demies) first
+  const p6 = MATCHES_P6.find(m => m.id === matchId);
+  if (p6) return { ...p6, phase: 6 };
+  // Check Phase 4 (QF)
   const p4 = MATCHES_P4.find(m => m.id === matchId);
   if (p4) return { ...p4, phase: 4 };
   // Check Phase 3 (8es)

@@ -129,7 +129,7 @@
       <p>Récupère les résultats des matchs joués et recalcule tous les points automatiquement.</p>
       <button class="btn-api" onclick="fetchResultats()">🔄 Récupérer résultats CDM</button>
       <button class="btn-recalc" onclick="recalculerTousLesPoints()">⚡ Recalculer tous les points</button>
-      <button class="btn-api" onclick="recalculComplet()" style="background:#3a1a6b;border-color:#6a3aab;color:#c09fdf;margin-top:8px;display:block;width:100%">🔁 Recalcul complet P1+P2+P3+P4</button>
+      <button class="btn-api" onclick="recalculComplet()" style="background:#3a1a6b;border-color:#6a3aab;color:#c09fdf;margin-top:8px;display:block;width:100%">🔁 Recalcul complet (toutes phases)</button>
     </div>
 
     <!-- PARTICIPANTS -->
@@ -180,12 +180,43 @@
       <div id="matchsAdminP3"></div>
     </div>
 
-    <div class="phase-toggle active" onclick="toggleSection('matchsP4Body','chevMatchsP4')">
-      <div><div class="phase-toggle-title">🏆 Résultats Phase 4 – Quarts de finale</div><div class="phase-toggle-sub">Phase en cours</div></div>
-      <span class="phase-toggle-chevron open" id="chevMatchsP4">›</span>
+    <div class="phase-toggle" onclick="toggleSection('matchsP4Body','chevMatchsP4')">
+      <div><div class="phase-toggle-title">🏆 Résultats Phase 4 – Quarts de finale</div><div class="phase-toggle-sub">Cliquer pour déplier</div></div>
+      <span class="phase-toggle-chevron" id="chevMatchsP4">›</span>
     </div>
-    <div class="phase-body open" id="matchsP4Body">
+    <div class="phase-body" id="matchsP4Body">
       <div id="matchsAdminP4"></div>
+    </div>
+
+    <div class="phase-toggle active" onclick="toggleSection('matchsP6Body','chevMatchsP6')">
+      <div><div class="phase-toggle-title">⚔️ Résultats Phase 6 – Demi-finales</div><div class="phase-toggle-sub">Phase en cours</div></div>
+      <span class="phase-toggle-chevron open" id="chevMatchsP6">›</span>
+    </div>
+    <div class="phase-body open" id="matchsP6Body">
+      <div id="matchsAdminP6"></div>
+    </div>
+
+    <div class="phase-toggle" onclick="toggleSection('matchsP78Body','chevMatchsP78')">
+      <div><div class="phase-toggle-title">🥉🏆 Petite Finale & Grande Finale</div><div class="phase-toggle-sub">Équipes à définir après les demies</div></div>
+      <span class="phase-toggle-chevron" id="chevMatchsP78">›</span>
+    </div>
+    <div class="phase-body" id="matchsP78Body">
+      <div style="padding:12px;background:#0f1e35;border-radius:10px;margin:8px 0">
+        <div style="font-size:12px;color:#5a7a9a;margin-bottom:12px">Renseigne les équipes une fois les demi-finales jouées</div>
+        <div style="font-size:13px;font-weight:600;color:#8ba0bf;margin-bottom:8px">🥉 Petite finale (18 juil. 23h00)</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input id="p7home" placeholder="Perdant demie 1" style="flex:1;background:#162b47;border:1px solid #2a4a6a;border-radius:8px;padding:8px;color:#fff;font-size:13px">
+          <input id="p7away" placeholder="Perdant demie 2" style="flex:1;background:#162b47;border:1px solid #2a4a6a;border-radius:8px;padding:8px;color:#fff;font-size:13px">
+        </div>
+        <div style="font-size:13px;font-weight:600;color:#d4af37;margin-bottom:8px">🏆 Grande finale (19 juil. 21h00)</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input id="p8home" placeholder="Vainqueur demie 1" style="flex:1;background:#162b47;border:1px solid #2a4a6a;border-radius:8px;padding:8px;color:#fff;font-size:13px">
+          <input id="p8away" placeholder="Vainqueur demie 2" style="flex:1;background:#162b47;border:1px solid #2a4a6a;border-radius:8px;padding:8px;color:#fff;font-size:13px">
+        </div>
+        <button onclick="saveFinaleTeams()" style="width:100%;background:#d4af37;color:#0a1628;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer">💾 Enregistrer les équipes</button>
+        <div id="finaleTeamsResult" style="margin-top:8px;font-size:12px;color:#5a7a9a"></div>
+      </div>
+      <div id="matchsAdminP78"></div>
     </div>
 
     <div class="phase-toggle active" onclick="toggleSection('boosterBody','chevBooster')">
@@ -607,6 +638,19 @@ async function calcBooster() {
   await loadParticipants();
 }
 
+async function saveFinaleTeams() {
+  const p7home = document.getElementById('p7home').value.trim();
+  const p7away = document.getElementById('p7away').value.trim();
+  const p8home = document.getElementById('p8home').value.trim();
+  const p8away = document.getElementById('p8away').value.trim();
+  if (!p7home || !p7away || !p8home || !p8away) { showToast('⚠️ Remplis les 4 équipes', 'error'); return; }
+  MATCH_P7 = {id:'R5_1', date:'18 juil.', home: p7home, away: p7away, phase:7};
+  MATCH_P8 = {id:'R5_2', date:'19 juil.', home: p8home, away: p8away, phase:8};
+  document.getElementById('finaleTeamsResult').textContent = `✅ Petite finale : ${p7home} vs ${p7away} · Grande finale : ${p8home} vs ${p8away}`;
+  renderMatchsAdmin();
+  showToast('✅ Équipes enregistrées !');
+}
+
 async function saveMatch(btn) {
   const matchId = btn.dataset.id;
   const home = btn.dataset.home;
@@ -747,12 +791,13 @@ async function recalculComplet() {
   // Grouper pronos par email et phase
   const byEmail = {};
   allPronos.forEach(p => {
-    if (!byEmail[p.email]) byEmail[p.email] = { p1: {}, p2: {}, p3: {}, p4: {} };
+    if (!byEmail[p.email]) byEmail[p.email] = { p1: {}, p2: {}, p3: {}, p4: {}, p6: {} };
     const ph = p.phase || 1;
     if (ph === 1) byEmail[p.email].p1 = p.pronos || {};
     else if (ph === 2) byEmail[p.email].p2 = p.pronos || {};
     else if (ph === 3) byEmail[p.email].p3 = p.pronos || {};
     else if (ph === 4) byEmail[p.email].p4 = p.pronos || {};
+    else if (ph === 6) byEmail[p.email].p6 = p.pronos || {};
   });
 
   for (const score of allScores) {
@@ -761,10 +806,11 @@ async function recalculComplet() {
     const pts2 = calcPointsPhase(data.p2, 2);
     const pts3 = calcPointsPhase(data.p3, 3);
     const pts4 = calcPointsPhase(data.p4, 4);
+    const pts6 = calcPointsPhase(data.p6 || {}, 6);
     await fetch(`${SUPABASE_URL}/rest/v1/scores?email=eq.${encodeURIComponent(score.email)}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ points_phase1: pts1, points_phase2: pts2 + pts3 + pts4, total_points: pts1 + pts2 + pts3 + pts4, last_updated: new Date().toISOString() })
+      body: JSON.stringify({ points_phase1: pts1, points_phase2: pts2 + pts3 + pts4 + pts6, total_points: pts1 + pts2 + pts3 + pts4 + pts6, last_updated: new Date().toISOString() })
     });
   }
 
