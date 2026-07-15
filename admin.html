@@ -855,6 +855,42 @@ async function recalculComplet() {
   await loadParticipants();
 }
 
+function toggleSection(bodyId, chevId) {
+  const body = document.getElementById(bodyId);
+  const chev = document.getElementById(chevId);
+  if (!body) return;
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  if (chev) chev.classList.toggle('open', !isOpen);
+}
+
+async function loadRecapList() {
+  const container = document.getElementById('recapList');
+  if (!container) return;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/scores?select=email,pseudo,total_points,points_phase1,points_phase2&order=total_points.desc`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    const data = await res.json();
+    if (!data.length) { container.innerHTML = '<p style="color:#5a7a9a;font-size:13px">Aucun participant.</p>'; return; }
+    container.innerHTML = data.map(p => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1e3356;cursor:pointer" onclick="copyRecapEmail('${p.email}')">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#fff">${p.pseudo}</div>
+          <div style="font-size:11px;color:#5a7a9a">${p.email}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:14px;font-weight:700;color:#d4af37">${p.total_points} pts</div>
+          <div style="font-size:10px;color:#5a7a9a">${p.points_phase1}P1 · ${p.points_phase2}P2+</div>
+        </div>
+      </div>`).join('');
+  } catch(e) { container.innerHTML = '<p style="color:#e07070;font-size:13px">Erreur de chargement.</p>'; }
+}
+
+function copyRecapEmail(email) {
+  navigator.clipboard?.writeText(email).then(() => showToast('📋 Email copié !'));
+}
+
 function showToast(msg, type = 'success') {
   const t = document.getElementById('toast');
   t.textContent = msg;
