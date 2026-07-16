@@ -50,7 +50,7 @@
   .rank-num.top1 { color: #d4af37; }
   .rank-num.top2 { color: #9aa0a8; }
   .rank-num.top3 { color: #cd7f32; }
-  .rank-pseudo { font-size: 15px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 55%; }
+  .rank-pseudo { font-size: 15px; font-weight: 700; color: #fff; }
   .rank-breakdown { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
   .rank-total { font-size: 18px; font-weight: 900; color: #d4af37; white-space: nowrap; }
   .rank-detail { font-size: 10px; color: #5a7a9a; text-align: right; }
@@ -404,16 +404,17 @@ function renderRanking() {
     const pts = getScore(s);
     listHTML += `
       <div class="rank-row ${rowClass}" onclick="showDetail('${s.email}')">
-        <div style="display:flex;align-items:center;gap:10px;width:100%">
-          <div class="rank-num ${numClass}">${rank}</div>
+        <div class="rank-num ${numClass}">${rank}</div>
+        <div style="flex:1;min-width:0">
           <div class="rank-pseudo">${s.pseudo}</div>
-          <div style="flex:1"></div>
+          <div style="font-size:10px;color:#5a7a9a;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+            ${s.points_phase1}pts P1 · ${s.points_phase2}pts P2+3 ${s.points_booster > 0 ? `· 🚀${s.points_booster}pts booster` : ''} <span class="rank-accuracy">🎯 ${acc(s)}%</span>
+          </div>
+        </div>
+        <div class="rank-breakdown">
           <div class="rank-total">${pts} pts</div>
-          <div class="rank-chevron">›</div>
         </div>
-        <div style="padding-left:38px;font-size:10px;color:#5a7a9a;margin-top:2px">
-          ${s.points_phase1}pts P1 · ${s.points_phase2}pts P2+3 ${s.points_booster > 0 ? `(dont 🚀${s.points_booster}pts booster)` : ''} <span class="rank-accuracy">🎯 ${acc(s)}%</span>
-        </div>
+        <div class="rank-chevron">›</div>
       </div>`;
   });
   listHTML += '</div>';
