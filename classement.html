@@ -296,7 +296,7 @@ async function loadClassement() {
   try {
     // Load scores, pronostics and resultats in parallel
     const [resScores, resPronos, resResultats] = await Promise.all([
-      fetch(`${SUPABASE_URL}/rest/v1/scores?select=*&order=total_points.desc`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+      fetch(`${SUPABASE_URL}/rest/v1/scores?select=*,points_booster&order=total_points.desc`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
       fetch(`${SUPABASE_URL}/rest/v1/pronostics?phase=eq.1`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
       fetch(`${SUPABASE_URL}/rest/v1/resultats`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
     ]);
@@ -408,7 +408,7 @@ function renderRanking() {
         <div class="rank-pseudo">${s.pseudo}</div>
         <div class="rank-breakdown">
           <div class="rank-total">${pts} pts</div>
-          <div class="rank-detail">${s.points_phase1}pts P1 · ${s.points_phase2}pts P2+3 <span class="rank-accuracy">🎯 ${acc(s)}%</span></div>
+          <div class="rank-detail">${s.points_phase1}pts P1 · ${s.points_phase2}pts P2+3 ${s.points_booster > 0 ? `(dont 🚀${s.points_booster}pts booster)` : ''} <span class="rank-accuracy">🎯 ${acc(s)}%</span></div>
         </div>
         <div class="rank-chevron">›</div>
       </div>`;

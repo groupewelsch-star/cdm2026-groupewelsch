@@ -686,7 +686,7 @@ async function calcBooster() {
     await fetch(`${SUPABASE_URL}/rest/v1/scores?email=eq.${encodeURIComponent(score.email)}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ points_phase1: pts1, points_phase2: totalP2plus, total_points: total, last_updated: new Date().toISOString() })
+      body: JSON.stringify({ points_phase1: pts1, points_phase2: totalP2plus, points_booster: ptsBooster, total_points: total, last_updated: new Date().toISOString() })
     });
     if (ptsBooster > 0) details.push(`${score.pseudo} +${ptsBooster}pts`);
   }
