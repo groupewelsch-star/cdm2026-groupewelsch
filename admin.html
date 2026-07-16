@@ -227,14 +227,8 @@
       <div style="padding:16px;background:#0f1e35;border-radius:12px;margin:8px 0">
         <div style="font-size:13px;color:#8ba0bf;margin-bottom:12px;font-weight:600">🏆 Équipes finalistes réelles</div>
         <div style="display:flex;gap:10px;margin-bottom:12px">
-          <select id="boosterTeam1" style="flex:1;background:#162b47;border:1px solid #2a4a6a;border-radius:8px;padding:10px;color:#e8edf5;font-size:13px">
-            <option value="">Équipe 1</option>
-            <option>France</option><option>Maroc</option><option>Espagne</option><option>Belgique</option>
-          </select>
-          <select id="boosterTeam2" style="flex:1;background:#162b47;border:1px solid #2a4a6a;border-radius:8px;padding:10px;color:#e8edf5;font-size:13px">
-            <option value="">Équipe 2</option>
-            <option>Norvège</option><option>Angleterre</option><option>Argentine</option><option>Suisse</option>
-          </select>
+          <div style="flex:1;background:#0d3320;border:1px solid #2a6a40;border-radius:8px;padding:10px;color:#4ade80;font-size:14px;font-weight:700;text-align:center">🇪🇸 Espagne</div>
+          <div style="flex:1;background:#0d3320;border:1px solid #2a6a40;border-radius:8px;padding:10px;color:#4ade80;font-size:14px;font-weight:700;text-align:center">🇦🇷 Argentine</div>
         </div>
         <div style="font-size:13px;color:#8ba0bf;margin-bottom:8px;font-weight:600">⚽ Score final</div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
@@ -630,66 +624,76 @@ function renderMatchsAdmin() {
 }
 
 async function calcBooster() {
-  // Équipes finalistes réelles — codées en dur
-  // Équipes finalistes réelles
-  // team1 = vainqueur du QF France/Maroc ou Espagne/Belgique → Espagne
-  // team2 = vainqueur du QF Norvège/Angleterre ou Argentine/Suisse → Argentine  
-  const FINALE_TEAM1 = 'Espagne';   // Vainqueur côté 1 (France/Maroc/Espagne/Belgique)
-  const FINALE_TEAM2 = 'Argentine'; // Vainqueur côté 2 (Norvège/Angleterre/Argentine/Suisse)
+  if (!confirm('Recalcul complet P1+P2+P3+P4+P6+Booster depuis zero. Continuer ?')) return;
+
+  const FINALE_TEAM1 = 'Espagne';
+  const FINALE_TEAM2 = 'Argentine';
   const FINALE_SCORE1 = parseInt(document.getElementById('boosterScore1').value);
   const FINALE_SCORE2 = parseInt(document.getElementById('boosterScore2').value);
   const FINALE_RESULT = document.getElementById('boosterResult').value;
 
-  // Afficher les équipes utilisées pour le calcul
-  document.getElementById('boosterResult2').textContent = `⏳ Calcul en cours... Finale réelle : ${FINALE_TEAM1} vs ${FINALE_TEAM2}`;
+  document.getElementById('boosterResult2').textContent = 'Recalcul en cours...';
+  showToast('Recalcul en cours...');
 
-  // Load all booster pronos
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/pronostics?phase=eq.5`, {
-    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+  const [allPronRes, allScoresRes, boosterRes] = await Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/pronostics`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+    fetch(`${SUPABASE_URL}/rest/v1/scores`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+    fetch(`${SUPABASE_URL}/rest/v1/pronostics?phase=eq.5`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
+  ]);
+  const allPronos = await allPronRes.json();
+  const allScores = await allScoresRes.json();
+  const boosterPronos = await boosterRes.json();
+
+  const byEmail = {};
+  allPronos.forEach(p => {
+    if (!byEmail[p.email]) byEmail[p.email] = { p1:{}, p2:{}, p3:{}, p4:{}, p6:{} };
+    const ph = p.phase || 1;
+    if (ph === 1) byEmail[p.email].p1 = p.pronos || {};
+    else if (ph === 2) byEmail[p.email].p2 = p.pronos || {};
+    else if (ph === 3) byEmail[p.email].p3 = p.pronos || {};
+    else if (ph === 4) byEmail[p.email].p4 = p.pronos || {};
+    else if (ph === 6) byEmail[p.email].p6 = p.pronos || {};
   });
-  const pronos = await res.json();
 
-  let updated = 0;
-  let details = [];
-  for (const p of pronos) {
+  const clean = s => (s || '').replace(/[^a-zA-ZÀ-ÿ\s]/g, '').trim().toLowerCase();
+  const boosterByEmail = {};
+  boosterPronos.forEach(p => {
     const prono = (p.pronos || {}).FINAL || {};
     let pts = 0;
-    // Comparer avec les vraies équipes (sans emojis, insensible à la casse)
-    const clean = s => (s || '').replace(/[^\w\s]/gu, '').trim().toLowerCase();
     const pt1 = clean(prono.team1) === clean(FINALE_TEAM1);
     const pt2 = clean(prono.team2) === clean(FINALE_TEAM2);
-
     if (pt1 && pt2) pts += 6;
     else if (pt1 || pt2) pts += 3;
-
-    // Score exact + bon résultat = +4pts
     if (!isNaN(FINALE_SCORE1) && !isNaN(FINALE_SCORE2) &&
         prono.score1 === FINALE_SCORE1 && prono.score2 === FINALE_SCORE2 &&
         prono.result === FINALE_RESULT) pts += 4;
+    boosterByEmail[p.email] = pts;
+    console.log(p.pseudo, 'team1:', prono.team1, 'clean:', clean(prono.team1), 'match:', pt1, '| team2:', prono.team2, 'clean:', clean(prono.team2), 'match:', pt2, '| pts:', pts);
+  });
 
-    if (pts > 0) {
-      const scRes = await fetch(`${SUPABASE_URL}/rest/v1/scores?email=eq.${encodeURIComponent(p.email)}&select=points_phase1,points_phase2,total_points`, {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-      });
-      const sc = await scRes.json();
-      if (sc.length) {
-        const newP2 = (sc[0].points_phase2 || 0) + pts;
-        const newTotal = (sc[0].points_phase1 || 0) + newP2;
-        await fetch(`${SUPABASE_URL}/rest/v1/scores?email=eq.${encodeURIComponent(p.email)}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ points_phase2: newP2, total_points: newTotal, last_updated: new Date().toISOString() })
-        });
-        updated++;
-        details.push(`${p.pseudo} +${pts}pts`);
-      }
-    }
+  let details = [];
+  for (const score of allScores) {
+    const data = byEmail[score.email] || { p1:{}, p2:{}, p3:{}, p4:{}, p6:{} };
+    const pts1 = calcPointsPhase(data.p1, 1);
+    const pts2 = calcPointsPhase(data.p2, 2);
+    const pts3 = calcPointsPhase(data.p3, 3);
+    const pts4 = calcPointsPhase(data.p4, 4);
+    const pts6 = calcPointsPhase(data.p6, 6);
+    const ptsBooster = boosterByEmail[score.email] || 0;
+    const totalP2plus = pts2 + pts3 + pts4 + pts6 + ptsBooster;
+    const total = pts1 + totalP2plus;
+
+    await fetch(`${SUPABASE_URL}/rest/v1/scores?email=eq.${encodeURIComponent(score.email)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ points_phase1: pts1, points_phase2: totalP2plus, total_points: total, last_updated: new Date().toISOString() })
+    });
+    if (ptsBooster > 0) details.push(`${score.pseudo} +${ptsBooster}pts`);
   }
 
-  document.getElementById('boosterResult2').textContent = `✅ ${updated} participants ont gagné des points booster. (${details.join(', ')})`;
-  showToast('🚀 Points booster calculés !');
+  document.getElementById('boosterResult2').textContent = 'Recalcul termine. Boosters : ' + (details.length > 0 ? details.join(', ') : 'aucun');
+  showToast('Recalcul termine !');
   await loadParticipants();
-}
 
 async function saveFinaleTeams() {
   const p7home = document.getElementById('p7home').value.trim();
