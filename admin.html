@@ -424,6 +424,7 @@ async function loadAdmin() {
   await loadResultats();
   renderMatchsAdmin();
   await loadRecapList();
+  await loadFinaleTeams();
 }
 
 async function loadParticipants() {
@@ -681,11 +682,52 @@ async function saveFinaleTeams() {
   const p8home = document.getElementById('p8home').value.trim();
   const p8away = document.getElementById('p8away').value.trim();
   if (!p7home || !p7away || !p8home || !p8away) { showToast('⚠️ Remplis les 4 équipes', 'error'); return; }
+
+  // Sauvegarder en base dans resultats avec home_score null (juste pour stocker les équipes)
+  const saves = [
+    { match_id:'R5_1', phase:7, home_team:p7home, away_team:p7away, home_score:null, away_score:null, result:null, updated_at: new Date().toISOString() },
+    { match_id:'R5_2', phase:8, home_team:p8home, away_team:p8away, home_score:null, away_score:null, result:null, updated_at: new Date().toISOString() }
+  ];
+  for (const s of saves) {
+    await fetch(`${SUPABASE_URL}/rest/v1/resultats`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'resolution=merge-duplicates' },
+      body: JSON.stringify(s)
+    });
+  }
+
   MATCH_P7 = {id:'R5_1', date:'18 juil.', home: p7home, away: p7away, phase:7};
   MATCH_P8 = {id:'R5_2', date:'19 juil.', home: p8home, away: p8away, phase:8};
   document.getElementById('finaleTeamsResult').textContent = `✅ Petite finale : ${p7home} vs ${p7away} · Grande finale : ${p8home} vs ${p8away}`;
   renderMatchsAdmin();
-  showToast('✅ Équipes enregistrées !');
+  showToast('✅ Équipes sauvegardées en base !');
+}
+
+async function loadFinaleTeams() {
+  // Charger les équipes finale depuis la base au démarrage
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/resultats?match_id=in.(R5_1,R5_2)`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    const data = await res.json();
+    data.forEach(r => {
+      if (r.match_id === 'R5_1') {
+        MATCH_P7 = {id:'R5_1', date:'18 juil.', home: r.home_team, away: r.away_team, phase:7};
+        document.getElementById('p7home').value = r.home_team;
+        document.getElementById('p7away').value = r.away_team;
+      }
+      if (r.match_id === 'R5_2') {
+        MATCH_P8 = {id:'R5_2', date:'19 juil.', home: r.home_team, away: r.away_team, phase:8};
+        document.getElementById('p8home').value = r.home_team;
+        document.getElementById('p8away').value = r.away_team;
+      }
+    });
+    if (data.length) {
+      const p7 = data.find(r => r.match_id === 'R5_1');
+      const p8 = data.find(r => r.match_id === 'R5_2');
+      if (p7 && p8) document.getElementById('finaleTeamsResult').textContent = `✅ Petite finale : ${p7.home_team} vs ${p7.away_team} · Grande finale : ${p8.home_team} vs ${p8.away_team}`;
+    }
+  } catch(e) {}
 }
 
 async function saveMatch(btn) {
