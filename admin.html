@@ -694,6 +694,7 @@ async function calcBooster() {
   document.getElementById('boosterResult2').textContent = 'Recalcul termine. Boosters : ' + (details.length > 0 ? details.join(', ') : 'aucun');
   showToast('Recalcul termine !');
   await loadParticipants();
+}
 
 async function saveFinaleTeams() {
   const p7home = document.getElementById('p7home').value.trim();
