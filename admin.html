@@ -210,8 +210,8 @@
         </div>
         <div style="font-size:13px;font-weight:600;color:#d4af37;margin-bottom:8px">🏆 Grande finale (19 juil. 21h00)</div>
         <div style="display:flex;gap:8px;margin-bottom:12px">
-          <input id="p8home" placeholder="Vainqueur demie 1" value="Espagne" style="flex:1;background:#162b47;border:1px solid #2a4a6a;border-radius:8px;padding:8px;color:#fff;font-size:13px">
-          <input id="p8away" placeholder="Vainqueur demie 2" value="Argentine" style="flex:1;background:#162b47;border:1px solid #2a4a6a;border-radius:8px;padding:8px;color:#fff;font-size:13px">
+          <input id="p8home" placeholder="Vainqueur demie 1" value="Argentine" style="flex:1;background:#162b47;border:1px solid #2a4a6a;border-radius:8px;padding:8px;color:#fff;font-size:13px">
+          <input id="p8away" placeholder="Vainqueur demie 2" value="Espagne" style="flex:1;background:#162b47;border:1px solid #2a4a6a;border-radius:8px;padding:8px;color:#fff;font-size:13px">
         </div>
         <button onclick="saveFinaleTeams()" style="width:100%;background:#d4af37;color:#0a1628;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer">💾 Enregistrer les équipes</button>
         <div id="finaleTeamsResult" style="margin-top:8px;font-size:12px;color:#5a7a9a"></div>
@@ -320,7 +320,7 @@ const MATCHES_P6 = [
 
 // Équipes finales
 let MATCH_P7 = {id:'R5_1', date:'18 juil.', home:'France', away:'Angleterre', phase:7};
-let MATCH_P8 = {id:'R5_2', date:'19 juil.', home:'Espagne', away:'Argentine', phase:8};
+let MATCH_P8 = {id:'R5_2', date:'19 juil.', home:'Argentine', away:'Espagne', phase:8};
 
 const GROUPS = [
   { letter: 'A', teams: ['🇲🇽 Mexique', '🇰🇷 Corée du Sud', '🇿🇦 Afrique du Sud', '🇨🇿 Tchéquie'], matches: [
@@ -631,8 +631,11 @@ function renderMatchsAdmin() {
 
 async function calcBooster() {
   // Équipes finalistes réelles — codées en dur
-  const FINALE_TEAM1 = 'Espagne';   // Vainqueur demi 1
-  const FINALE_TEAM2 = 'Argentine'; // Vainqueur demi 2
+  // Équipes finalistes réelles
+  // team1 = vainqueur du QF France/Maroc ou Espagne/Belgique → Espagne
+  // team2 = vainqueur du QF Norvège/Angleterre ou Argentine/Suisse → Argentine  
+  const FINALE_TEAM1 = 'Espagne';   // Vainqueur côté 1 (France/Maroc/Espagne/Belgique)
+  const FINALE_TEAM2 = 'Argentine'; // Vainqueur côté 2 (Norvège/Angleterre/Argentine/Suisse)
   const FINALE_SCORE1 = parseInt(document.getElementById('boosterScore1').value);
   const FINALE_SCORE2 = parseInt(document.getElementById('boosterScore2').value);
   const FINALE_RESULT = document.getElementById('boosterResult').value;
