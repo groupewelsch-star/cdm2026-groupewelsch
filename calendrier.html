@@ -190,6 +190,14 @@ const MATCHES_P6 = [
   {id:'R4_2', date:'15 juil.',  home:'Angleterre',  away:'Argentine',  group:'1/2', heure:'21h00', kickoff:'2026-07-15T19:00:00Z'},
 ];
 
+const MATCHES_P7 = [
+  {id:'R5_1', date:'18 juil.',  home:'France',     away:'Angleterre',  group:'3e', heure:'23h00', kickoff:'2026-07-18T21:00:00Z'},
+];
+
+const MATCHES_P8 = [
+  {id:'R5_2', date:'19 juil.',  home:'Argentine',  away:'Espagne',     group:'F',  heure:'21h00', kickoff:'2026-07-19T19:00:00Z'},
+];
+
 const MATCHES_P4 = [
   {id:'R3_1', date:'9 juil.',   home:'France',     away:'Maroc',       group:'QF', heure:'22h00', kickoff:'2026-07-09T20:00:00Z'},
   {id:'R3_2', date:'10 juil.',  home:'Espagne',    away:'Belgique',    group:'QF', heure:'21h00', kickoff:'2026-07-10T19:00:00Z'},
@@ -228,13 +236,15 @@ async function loadCalendar() {
 
   try {
     const _h = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` };
-    const [resResultats, resP1, resP2, resP3, resP4, resP6, resScores] = await Promise.all([
+    const [resResultats, resP1, resP2, resP3, resP4, resP6, resP7, resP8, resScores] = await Promise.all([
       fetch(`${SUPABASE_URL}/rest/v1/resultats`, { headers: _h }),
       fetch(`${SUPABASE_URL}/rest/v1/pronostics?phase=eq.1`, { headers: _h }),
       fetch(`${SUPABASE_URL}/rest/v1/pronostics?phase=eq.2`, { headers: _h }),
       fetch(`${SUPABASE_URL}/rest/v1/pronostics?phase=eq.3`, { headers: _h }),
       fetch(`${SUPABASE_URL}/rest/v1/pronostics?phase=eq.4`, { headers: _h }),
       fetch(`${SUPABASE_URL}/rest/v1/pronostics?phase=eq.6`, { headers: _h }),
+      fetch(`${SUPABASE_URL}/rest/v1/pronostics?phase=eq.7`, { headers: _h }),
+      fetch(`${SUPABASE_URL}/rest/v1/pronostics?phase=eq.8`, { headers: _h }),
       fetch(`${SUPABASE_URL}/rest/v1/scores?select=pseudo,email`, { headers: _h })
     ]);
     const resultatsData = await resResultats.json();
@@ -243,6 +253,8 @@ async function loadCalendar() {
     const pronosticsData3 = await resP3.json();
     const pronosticsData4 = await resP4.json();
     const pronosticsData6 = await resP6.json();
+    const pronosticsData7 = await resP7.json();
+    const pronosticsData8 = await resP8.json();
     const scoresData = await resScores.json();
 
     const resultatsByMatch = {};
@@ -255,6 +267,8 @@ async function loadCalendar() {
     window._allPronostics3 = pronosticsData3;
     window._allPronostics4 = pronosticsData4;
     window._allPronostics6 = pronosticsData6;
+    window._allPronostics7 = pronosticsData7;
+    window._allPronostics8 = pronosticsData8;
     window._allResultats = resultatsByMatch;
     window._allScores = scoresData;
 
@@ -366,6 +380,14 @@ async function loadCalendar() {
     const p1HTML = buildPhaseHTML(p1Matches, pronosticsData, 1);
     const p2HTML = buildPhaseHTML(p2MatchesSorted, pronosticsData2, 2);
 
+    // Phase 8 = Grande Finale
+    const p8MatchesSorted = [...MATCHES_P8].sort((a,b) => new Date(a.kickoff) - new Date(b.kickoff));
+    const p8HTML = buildPhaseHTML(p8MatchesSorted, pronosticsData8, 8);
+
+    // Phase 7 = Petite Finale
+    const p7MatchesSorted = [...MATCHES_P7].sort((a,b) => new Date(a.kickoff) - new Date(b.kickoff));
+    const p7HTML = buildPhaseHTML(p7MatchesSorted, pronosticsData7, 7);
+
     // Phase 6 = Demi-finales
     const p6MatchesSorted = [...MATCHES_P6].sort((a,b) => new Date(a.kickoff) - new Date(b.kickoff));
     const p6HTML = buildPhaseHTML(p6MatchesSorted, pronosticsData6, 6);
@@ -379,11 +401,23 @@ async function loadCalendar() {
     const p3HTML = buildPhaseHTML(p3MatchesSorted, pronosticsData3, 3);
 
     container.innerHTML = `
-      <div class="phase-header active" onclick="togglePhase('p6')">
-        <div><div class="phase-header-title">⚔️ Demi-finales</div><div class="phase-header-sub">Phase en cours</div></div>
-        <span class="phase-header-chevron open" id="chevron_p6">›</span>
+      <div class="phase-header active" onclick="togglePhase('p8')">
+        <div><div class="phase-header-title">🏆 Grande Finale</div><div class="phase-header-sub">Argentine vs Espagne · 19 juil.</div></div>
+        <span class="phase-header-chevron open" id="chevron_p8">›</span>
       </div>
-      <div class="phase-body open" id="body_p6">${p6HTML || '<p style="color:#5a7a9a;font-size:13px;padding:10px 0">Aucun match enregistré.</p>'}</div>
+      <div class="phase-body open" id="body_p8">${p8HTML || '<p style="color:#5a7a9a;font-size:13px;padding:10px 0">Aucun match enregistré.</p>'}</div>
+
+      <div class="phase-header active" onclick="togglePhase('p7')" style="margin-top:16px">
+        <div><div class="phase-header-title">🥉 Petite Finale</div><div class="phase-header-sub">France vs Angleterre · 18 juil.</div></div>
+        <span class="phase-header-chevron open" id="chevron_p7">›</span>
+      </div>
+      <div class="phase-body open" id="body_p7">${p7HTML || '<p style="color:#5a7a9a;font-size:13px;padding:10px 0">Aucun match enregistré.</p>'}</div>
+
+      <div class="phase-header" onclick="togglePhase('p6')" style="margin-top:16px">
+        <div><div class="phase-header-title">⚔️ Demi-finales</div><div class="phase-header-sub">Terminées · Cliquer pour voir</div></div>
+        <span class="phase-header-chevron" id="chevron_p6">›</span>
+      </div>
+      <div class="phase-body" id="body_p6">${p6HTML || '<p style="color:#5a7a9a;font-size:13px;padding:10px 0">Aucun match enregistré.</p>'}</div>
 
       <div class="phase-header" onclick="togglePhase('p4')" style="margin-top:16px">
         <div><div class="phase-header-title">🏆 Quarts de finale</div><div class="phase-header-sub">Terminés · Cliquer pour voir</div></div>
@@ -425,13 +459,13 @@ function goToMatch(matchId) {
 }
 
 function showParticipation(matchId, matchTitle, phase) {
-  const allPronostics = phase === 6 ? (window._allPronostics6 || []) : phase === 4 ? (window._allPronostics4 || []) : phase === 3 ? (window._allPronostics3 || []) : phase === 2 ? (window._allPronostics2 || []) : (window._allPronostics || []);
+  const allPronostics = phase === 8 ? (window._allPronostics8 || []) : phase === 7 ? (window._allPronostics7 || []) : phase === 6 ? (window._allPronostics6 || []) : phase === 4 ? (window._allPronostics4 || []) : phase === 3 ? (window._allPronostics3 || []) : phase === 2 ? (window._allPronostics2 || []) : (window._allPronostics || []);
   console.log('showParticipation phase:', phase, 'pronos count:', allPronostics.length, 'scores count:', (window._allScores||[]).length);
   const allScores = window._allScores || [];
   const reel = (window._allResultats || {})[matchId];
 
   document.getElementById('partMatchTitle').textContent = matchTitle;
-  document.getElementById('partMatchSub').textContent = phase === 6 ? 'Demi-finales' : phase === 4 ? 'Quarts de finale' : phase === 3 ? '8es de finale' : phase === 2 ? '16es de finale' : 'Phase de poules';
+  document.getElementById('partMatchSub').textContent = phase === 8 ? 'Grande Finale' : phase === 7 ? 'Petite Finale' : phase === 6 ? 'Demi-finales' : phase === 4 ? 'Quarts de finale' : phase === 3 ? '8es de finale' : phase === 2 ? '16es de finale' : 'Phase de poules';
 
   const withProno = [];
   const withoutProno = [];
