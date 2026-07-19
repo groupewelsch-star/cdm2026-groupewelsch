@@ -621,6 +621,40 @@ function renderMatchsAdmin() {
     p6block.appendChild(row);
   });
   p6container.appendChild(p6block);
+
+  // Rendu Phase 7/8 - Petite finale & Grande finale
+  const p78container = document.getElementById('matchsAdminP78');
+  if (p78container) {
+    p78container.innerHTML = '';
+    [MATCH_P7, MATCH_P8].forEach(m => {
+      const r = resultatsDB[m.id];
+      const isDone = r && r.home_score !== null && r.home_score !== undefined;
+      const block = document.createElement('div');
+      block.className = 'group-block';
+      block.innerHTML = `<div class="group-header"><div class="group-letter">${m.phase===7?'🥉':'🏆'}</div><div class="group-name">${m.phase===7?'Petite finale':'Grande finale'}</div></div>`;
+      const row = document.createElement('div');
+      row.className = 'match-admin';
+      row.innerHTML = `
+        <div class="match-admin-top">
+          <div class="match-admin-date">${m.date}</div>
+          <div class="match-admin-teams">
+            <span>${m.home}</span>
+            <span style="color:#5a7a9a;font-size:11px">vs</span>
+            <span>${m.away}</span>
+          </div>
+          <span class="match-status ${isDone?'done':'pending'}">${isDone?'✓ '+r.home_score+'-'+r.away_score:'En attente'}</span>
+        </div>
+        <div class="match-score-zone">
+          <input class="score-admin-box" type="number" min="0" max="20" id="ah_${m.id}" placeholder="?" value="${isDone?r.home_score:''}">
+          <span style="color:#5a7a9a;font-weight:700">–</span>
+          <input class="score-admin-box" type="number" min="0" max="20" id="aa_${m.id}" placeholder="?" value="${isDone?r.away_score:''}">
+          <button class="save-match-btn" onclick="saveMatch(this)" data-id="${m.id}" data-home="${m.home}" data-away="${m.away}" data-phase="${m.phase}">💾 Sauver</button>
+          ${isDone ? `<button class="delete-match-btn" onclick="deleteMatch('${m.id}')">🗑️ Annuler</button>` : ""}
+        </div>`;
+      block.appendChild(row);
+      p78container.appendChild(block);
+    });
+  }
 }
 
 async function calcBooster() {
