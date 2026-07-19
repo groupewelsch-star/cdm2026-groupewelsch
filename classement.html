@@ -30,7 +30,7 @@
   .content { max-width: 500px; margin: 0 auto; padding: 16px; }
 
   /* PODIUM */
-  .podium { display: flex; align-items: flex-end; justify-content: center; gap: 8px; margin-bottom: 24px; }
+  .podium { display: flex; align-items: flex-end; justify-content: center; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
   .podium-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
   .podium-avatar { font-size: 22px; background: #1a2f50; border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 16px; color: #fff; border: 2px solid #2a4a7a; }
   .podium-name { font-size: 11px; font-weight: 700; color: #e8edf5; text-align: center; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -376,21 +376,31 @@ function renderRanking() {
   const getScore = s => currentPhase === '1' ? s.points_phase1 : currentPhase === '2' ? s.points_phase2 : s.total_points;
   const getInitials = name => name.split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2);
 
-  // PODIUM (top 3)
-  let podiumHTML = '<div class="podium">';
-  const podiumOrder = sorted.length >= 2 ? [sorted[1], sorted[0], sorted[2]].filter(Boolean) : sorted.slice(0,3);
-  const posLabels = sorted.length >= 2 ? ['🥈','🥇','🥉'] : ['🥇','🥈','🥉'];
-  const barClasses = sorted.length >= 2 ? ['p2','p1','p3'] : ['p1','p2','p3'];
+  // Classement avec gestion des ex æquo (rang identique si score identique)
+  const ranks = [];
+  sorted.forEach((s, i) => {
+    ranks.push(i === 0 ? 1 : (getScore(s) === getScore(sorted[i-1]) ? ranks[i-1] : i + 1));
+  });
 
-  podiumOrder.forEach((s, i) => {
-    if (!s) return;
+  // PODIUM (top 3, avec ex æquo)
+  const rank1 = sorted.filter((s, i) => ranks[i] === 1);
+  const rank2 = sorted.filter((s, i) => ranks[i] === 2);
+  const rank3 = sorted.filter((s, i) => ranks[i] === 3);
+  const podiumOrder = [
+    ...rank2.map(s => ({ s, barClass: 'p2', label: '🥈' })),
+    ...rank1.map(s => ({ s, barClass: 'p1', label: '🥇' })),
+    ...rank3.map(s => ({ s, barClass: 'p3', label: '🥉' })),
+  ];
+
+  let podiumHTML = '<div class="podium">';
+  podiumOrder.forEach(({ s, barClass, label }) => {
     podiumHTML += `
       <div class="podium-item">
         <div class="podium-avatar">${getInitials(s.pseudo)}</div>
         <div class="podium-name">${s.pseudo}</div>
         <div class="podium-pts">${getScore(s)} pts</div>
         <div class="podium-accuracy">🎯 ${acc(s)}%</div>
-        <div class="podium-bar ${barClasses[i]}">${posLabels[i]}</div>
+        <div class="podium-bar ${barClass}">${label}</div>
       </div>`;
   });
   podiumHTML += '</div>';
@@ -398,7 +408,7 @@ function renderRanking() {
   // LISTE complète
   let listHTML = '<div class="ranking-list">';
   sorted.forEach((s, i) => {
-    const rank = i + 1;
+    const rank = ranks[i];
     const numClass = rank===1?'top1':rank===2?'top2':rank===3?'top3':'';
     const rowClass = rank<=3?`rank-${rank}`:'';
     const pts = getScore(s);
