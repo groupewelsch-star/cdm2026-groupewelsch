@@ -680,13 +680,15 @@ async function calcBooster() {
 
   const byEmail = {};
   allPronos.forEach(p => {
-    if (!byEmail[p.email]) byEmail[p.email] = { p1:{}, p2:{}, p3:{}, p4:{}, p6:{} };
+    if (!byEmail[p.email]) byEmail[p.email] = { p1:{}, p2:{}, p3:{}, p4:{}, p6:{}, p7:{}, p8:{} };
     const ph = p.phase || 1;
     if (ph === 1) byEmail[p.email].p1 = p.pronos || {};
     else if (ph === 2) byEmail[p.email].p2 = p.pronos || {};
     else if (ph === 3) byEmail[p.email].p3 = p.pronos || {};
     else if (ph === 4) byEmail[p.email].p4 = p.pronos || {};
     else if (ph === 6) byEmail[p.email].p6 = p.pronos || {};
+    else if (ph === 7) byEmail[p.email].p7 = p.pronos || {};
+    else if (ph === 8) byEmail[p.email].p8 = p.pronos || {};
   });
 
   const clean = s => (s || '').replace(/[^a-zA-ZÀ-ÿ\s]/g, '').trim().toLowerCase();
@@ -707,14 +709,16 @@ async function calcBooster() {
 
   let details = [];
   for (const score of allScores) {
-    const data = byEmail[score.email] || { p1:{}, p2:{}, p3:{}, p4:{}, p6:{} };
+    const data = byEmail[score.email] || { p1:{}, p2:{}, p3:{}, p4:{}, p6:{}, p7:{}, p8:{} };
     const pts1 = calcPointsPhase(data.p1, 1);
     const pts2 = calcPointsPhase(data.p2, 2);
     const pts3 = calcPointsPhase(data.p3, 3);
     const pts4 = calcPointsPhase(data.p4, 4);
     const pts6 = calcPointsPhase(data.p6, 6);
+    const pts7 = calcPointsPhase(data.p7, 7);
+    const pts8 = calcPointsPhase(data.p8, 8);
     const ptsBooster = boosterByEmail[score.email] || 0;
-    const totalP2plus = pts2 + pts3 + pts4 + pts6 + ptsBooster;
+    const totalP2plus = pts2 + pts3 + pts4 + pts6 + pts7 + pts8 + ptsBooster;
     const total = pts1 + totalP2plus;
 
     await fetch(`${SUPABASE_URL}/rest/v1/scores?email=eq.${encodeURIComponent(score.email)}`, {
@@ -925,26 +929,32 @@ async function recalculComplet() {
   // Grouper pronos par email et phase
   const byEmail = {};
   allPronos.forEach(p => {
-    if (!byEmail[p.email]) byEmail[p.email] = { p1: {}, p2: {}, p3: {}, p4: {}, p6: {} };
+    if (!byEmail[p.email]) byEmail[p.email] = { p1: {}, p2: {}, p3: {}, p4: {}, p6: {}, p7: {}, p8: {} };
     const ph = p.phase || 1;
     if (ph === 1) byEmail[p.email].p1 = p.pronos || {};
     else if (ph === 2) byEmail[p.email].p2 = p.pronos || {};
     else if (ph === 3) byEmail[p.email].p3 = p.pronos || {};
     else if (ph === 4) byEmail[p.email].p4 = p.pronos || {};
     else if (ph === 6) byEmail[p.email].p6 = p.pronos || {};
+    else if (ph === 7) byEmail[p.email].p7 = p.pronos || {};
+    else if (ph === 8) byEmail[p.email].p8 = p.pronos || {};
   });
 
   for (const score of allScores) {
-    const data = byEmail[score.email] || { p1: {}, p2: {}, p3: {}, p4: {} };
+    const data = byEmail[score.email] || { p1: {}, p2: {}, p3: {}, p4: {}, p6: {}, p7: {}, p8: {} };
     const pts1 = calcPointsPhase(data.p1, 1);
     const pts2 = calcPointsPhase(data.p2, 2);
     const pts3 = calcPointsPhase(data.p3, 3);
     const pts4 = calcPointsPhase(data.p4, 4);
     const pts6 = calcPointsPhase(data.p6 || {}, 6);
+    const pts7 = calcPointsPhase(data.p7 || {}, 7);
+    const pts8 = calcPointsPhase(data.p8 || {}, 8);
+    const ptsBooster = score.points_booster || 0;
+    const totalP2plus = pts2 + pts3 + pts4 + pts6 + pts7 + pts8 + ptsBooster;
     await fetch(`${SUPABASE_URL}/rest/v1/scores?email=eq.${encodeURIComponent(score.email)}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ points_phase1: pts1, points_phase2: pts2 + pts3 + pts4 + pts6, total_points: pts1 + pts2 + pts3 + pts4 + pts6, last_updated: new Date().toISOString() })
+      body: JSON.stringify({ points_phase1: pts1, points_phase2: totalP2plus, total_points: pts1 + totalP2plus, last_updated: new Date().toISOString() })
     });
   }
 
