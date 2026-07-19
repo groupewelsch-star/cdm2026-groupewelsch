@@ -154,7 +154,21 @@ const MATCHES_P6 = [
   {id:'R4_2', date:'15 juil.',  home:'Angleterre',  away:'Argentine',  group:'1/2'},
 ];
 
+const MATCHES_P7 = [
+  {id:'R5_1', date:'18 juil.', home:'France', away:'Angleterre', group:'3e'},
+];
+
+const MATCHES_P8 = [
+  {id:'R5_2', date:'19 juil.', home:'Argentine', away:'Espagne', group:'F'},
+];
+
 function findMatch(matchId) {
+  // Check Phase 8 (grande finale)
+  const p8 = MATCHES_P8.find(m => m.id === matchId);
+  if (p8) return { ...p8, phase: 8 };
+  // Check Phase 7 (petite finale)
+  const p7 = MATCHES_P7.find(m => m.id === matchId);
+  if (p7) return { ...p7, phase: 7 };
   // Check Phase 6 (demies) first
   const p6 = MATCHES_P6.find(m => m.id === matchId);
   if (p6) return { ...p6, phase: 6 };

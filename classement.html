@@ -446,6 +446,14 @@ const MATCHES_P6 = [
   {id:'R4_2', date:'15 juil.',  home:'Angleterre',  away:'Argentine',  kickoff:'2026-07-15T19:00:00Z'},
 ];
 
+const MATCHES_P7 = [
+  {id:'R5_1', date:'18 juil.', home:'France', away:'Angleterre', kickoff:'2026-07-18T21:00:00Z'},
+];
+
+const MATCHES_P8 = [
+  {id:'R5_2', date:'19 juil.', home:'Argentine', away:'Espagne', kickoff:'2026-07-19T19:00:00Z'},
+];
+
 const MATCHES_P4 = [
   {id:'R3_1', date:'9 juil.',   home:'France',     away:'Maroc',      kickoff:'2026-07-09T20:00:00Z'},
   {id:'R3_2', date:'10 juil.',  home:'Espagne',    away:'Belgique',   kickoff:'2026-07-10T19:00:00Z'},
@@ -483,7 +491,9 @@ function buildMatchHTML(prono, reel, home, away, stats, phase, kickoff) {
     } else {
       pts = 0; matchClass = 'lost'; ptsClass = 'pts0'; ptsLabel = '0'; stats.nb0++;
     }
-    if (phase === 6) stats.pts2 = (stats.pts2 || 0) + pts;
+    if (phase === 8) stats.pts2_grande = (stats.pts2_grande || 0) + pts;
+    else if (phase === 7) stats.pts2_petite = (stats.pts2_petite || 0) + pts;
+    else if (phase === 6) stats.pts2 = (stats.pts2 || 0) + pts;
     else if (phase === 4) stats.pts2_qf = (stats.pts2_qf || 0) + pts;
     else if (phase === 3) stats.pts2_8 = (stats.pts2_8 || 0) + pts;
     else if (phase === 2) stats.pts2_16 = (stats.pts2_16 || 0) + pts;
@@ -504,22 +514,28 @@ async function showDetail(email) {
   if (!participant || !scoreData) { alert('Pronostics non disponibles pour ce participant.'); return; }
 
   // Load Phase 2 pronos
-  let phase2Pronos = {}, phase3Pronos = {}, phase4Pronos = {}, phase6Pronos = {};
+  let phase2Pronos = {}, phase3Pronos = {}, phase4Pronos = {}, phase6Pronos = {}, phase7Pronos = {}, phase8Pronos = {};
   try {
-    const [res2, res3, res4, res6] = await Promise.all([
+    const [res2, res3, res4, res6, res7, res8] = await Promise.all([
       fetch(`${SUPABASE_URL}/rest/v1/pronostics?email=eq.${encodeURIComponent(email)}&phase=eq.2&select=pronos`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
       fetch(`${SUPABASE_URL}/rest/v1/pronostics?email=eq.${encodeURIComponent(email)}&phase=eq.3&select=pronos`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
       fetch(`${SUPABASE_URL}/rest/v1/pronostics?email=eq.${encodeURIComponent(email)}&phase=eq.4&select=pronos`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
-      fetch(`${SUPABASE_URL}/rest/v1/pronostics?email=eq.${encodeURIComponent(email)}&phase=eq.6&select=pronos`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
+      fetch(`${SUPABASE_URL}/rest/v1/pronostics?email=eq.${encodeURIComponent(email)}&phase=eq.6&select=pronos`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+      fetch(`${SUPABASE_URL}/rest/v1/pronostics?email=eq.${encodeURIComponent(email)}&phase=eq.7&select=pronos`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+      fetch(`${SUPABASE_URL}/rest/v1/pronostics?email=eq.${encodeURIComponent(email)}&phase=eq.8&select=pronos`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
     ]);
     const d2 = await res2.json();
     const d3 = await res3.json();
     const d4 = await res4.json();
     const d6 = await res6.json();
+    const d7 = await res7.json();
+    const d8 = await res8.json();
     if (d2.length) phase2Pronos = d2[0].pronos || {};
     if (d3.length) phase3Pronos = d3[0].pronos || {};
     if (d4.length) phase4Pronos = d4[0].pronos || {};
     if (d6.length) phase6Pronos = d6[0].pronos || {};
+    if (d7.length) phase7Pronos = d7[0].pronos || {};
+    if (d8.length) phase8Pronos = d8[0].pronos || {};
   } catch(e) {}
 
   const initials = scoreData.pseudo.split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2);
@@ -528,9 +544,27 @@ async function showDetail(email) {
   // pts2 and total computed after HTML generation below
 
   const pronos = participant.pronos || {};
-  const stats = { nb3: 0, nb1: 0, nb0: 0, pts2: 0, pts2_8: 0, pts2_16: 0, pts2_qf: 0, pts1: 0 };
+  const stats = { nb3: 0, nb1: 0, nb0: 0, pts2: 0, pts2_8: 0, pts2_16: 0, pts2_qf: 0, pts2_petite: 0, pts2_grande: 0, pts1: 0 };
   // Per-phase stats for tab switching
   window._detailStats = { total: null, p1: null, p2: null };
+
+  // === PHASE 8 - Grande Finale (ouvert par défaut) ===
+  let p8HTML = '';
+  MATCHES_P8.forEach(m => {
+    const prono = phase8Pronos[m.id];
+    const reel = allResultats[m.id];
+    if (!prono && !reel) return;
+    p8HTML += buildMatchHTML(prono, reel, m.home, m.away, stats, 8, m.kickoff);
+  });
+
+  // === PHASE 7 - Petite Finale (ouvert par défaut) ===
+  let p7HTML = '';
+  MATCHES_P7.forEach(m => {
+    const prono = phase7Pronos[m.id];
+    const reel = allResultats[m.id];
+    if (!prono && !reel) return;
+    p7HTML += buildMatchHTML(prono, reel, m.home, m.away, stats, 7, m.kickoff);
+  });
 
   // === PHASE 6 - Demi-finales (ouvert par défaut) ===
   let p6HTML = '';
@@ -587,6 +621,24 @@ async function showDetail(email) {
   });
 
   let bodyHTML = '';
+  if (p8HTML) {
+    bodyHTML += `<div class="phase-section">
+      <div class="phase-section-header phase2" onclick="toggleSection('p8section')">
+        <div><div class="phase-section-title">🏆 Grande Finale</div><div class="phase-section-pts">${stats.pts2_grande} pts</div></div>
+        <span class="phase-section-chevron open" id="chevron_p8section">›</span>
+      </div>
+      <div class="phase-section-body open" id="p8section">${p8HTML}</div>
+    </div>`;
+  }
+  if (p7HTML) {
+    bodyHTML += `<div class="phase-section">
+      <div class="phase-section-header phase2" onclick="toggleSection('p7section')">
+        <div><div class="phase-section-title">🥉 Petite Finale</div><div class="phase-section-pts">${stats.pts2_petite} pts</div></div>
+        <span class="phase-section-chevron open" id="chevron_p7section">›</span>
+      </div>
+      <div class="phase-section-body open" id="p7section">${p7HTML}</div>
+    </div>`;
+  }
   // Phase 2 section (open)
   if (p6HTML) {
     bodyHTML += `<div class="phase-section">
@@ -637,13 +689,16 @@ async function showDetail(email) {
   }
 
   document.getElementById('detailBody').innerHTML = bodyHTML || '<p style="color:#5a7a9a;font-size:13px;padding:10px">Aucun pronostic trouvé.</p>';
-  const computedP234 = stats.pts2 + (stats.pts2_qf||0) + stats.pts2_8 + stats.pts2_16;
+  const ptsBooster = scoreData.points_booster || 0;
+  const computedP234 = stats.pts2 + (stats.pts2_qf||0) + stats.pts2_8 + stats.pts2_16 + (stats.pts2_petite||0) + (stats.pts2_grande||0) + ptsBooster;
   const computedTotal = stats.pts1 + computedP234;
-  document.getElementById('detailScore').textContent = `${computedTotal} pts total · ${stats.pts1} pts P1 · ${computedP234} pts P2+3+4`;
+  document.getElementById('detailScore').textContent = `${computedTotal} pts total · ${stats.pts1} pts P1 · ${computedP234} pts P2+3+4${ptsBooster ? ' · 🚀'+ptsBooster+' booster' : ''}`;
 
   // Build per-phase body sections
   window._detailBodyP1 = p1HTML ? `<div class="phase-section"><div class="phase-section-header" onclick="toggleSection('p1only')"><div><div class="phase-section-title">⚽ Phase de poules</div><div class="phase-section-pts">${stats.pts1} pts</div></div><span class="phase-section-chevron open" id="chevron_p1only">›</span></div><div class="phase-section-body open" id="p1only">${p1HTML}</div></div>` : '';
-  window._detailBodyP2 = (p6HTML ? `<div class="phase-section"><div class="phase-section-header phase2" onclick="toggleSection('p6only')"><div><div class="phase-section-title">⚔️ Demi-finales</div><div class="phase-section-pts">${stats.pts2} pts</div></div><span class="phase-section-chevron open" id="chevron_p6only">›</span></div><div class="phase-section-body open" id="p6only">${p6HTML}</div></div>` : '') +
+  window._detailBodyP2 = (p8HTML ? `<div class="phase-section"><div class="phase-section-header phase2" onclick="toggleSection('p8only')"><div><div class="phase-section-title">🏆 Grande Finale</div><div class="phase-section-pts">${stats.pts2_grande} pts</div></div><span class="phase-section-chevron open" id="chevron_p8only">›</span></div><div class="phase-section-body open" id="p8only">${p8HTML}</div></div>` : '') +
+    (p7HTML ? `<div class="phase-section"><div class="phase-section-header phase2" onclick="toggleSection('p7only')"><div><div class="phase-section-title">🥉 Petite Finale</div><div class="phase-section-pts">${stats.pts2_petite} pts</div></div><span class="phase-section-chevron open" id="chevron_p7only">›</span></div><div class="phase-section-body open" id="p7only">${p7HTML}</div></div>` : '') +
+    (p6HTML ? `<div class="phase-section"><div class="phase-section-header phase2" onclick="toggleSection('p6only')"><div><div class="phase-section-title">⚔️ Demi-finales</div><div class="phase-section-pts">${stats.pts2} pts</div></div><span class="phase-section-chevron open" id="chevron_p6only">›</span></div><div class="phase-section-body open" id="p6only">${p6HTML}</div></div>` : '') +
     (p4HTML ? `<div class="phase-section"><div class="phase-section-header phase2" onclick="toggleSection('p4only')"><div><div class="phase-section-title">🏆 Quarts de finale</div><div class="phase-section-pts">${stats.pts2_qf||0} pts</div></div><span class="phase-section-chevron open" id="chevron_p4only">›</span></div><div class="phase-section-body open" id="p4only">${p4HTML}</div></div>` : '') +
     (p3HTML ? `<div class="phase-section"><div class="phase-section-header phase2" onclick="toggleSection('p3only')"><div><div class="phase-section-title">🔥 8es de finale</div><div class="phase-section-pts">${stats.pts2_8} pts</div></div><span class="phase-section-chevron open" id="chevron_p3only">›</span></div><div class="phase-section-body open" id="p3only">${p3HTML}</div></div>` : '') +
     (p2HTML ? `<div class="phase-section"><div class="phase-section-header phase2" onclick="toggleSection('p2only')"><div><div class="phase-section-title">⚡ 16es de finale</div><div class="phase-section-pts">${stats.pts2_16} pts</div></div><span class="phase-section-chevron open" id="chevron_p2only">›</span></div><div class="phase-section-body open" id="p2only">${p2HTML}</div></div>` : '');
