@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚙️ Admin CDM 2026 – Groupe Welsch</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a1628; color: #e8edf5; min-height: 100vh; }
+
+  /* LOGIN */
+  .login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+  .login-card { background: #0f1e35; border: 2px solid #d4af37; border-radius: 16px; padding: 32px 24px; max-width: 340px; width: 100%; text-align: center; }
+  .login-card h1 { font-size: 20px; font-weight: 900; color: #fff; margin: 12px 0 4px; }
+  .login-card p { font-size: 13px; color: #5a7a9a; margin-bottom: 24px; }
+  .login-input { width: 100%; background: #1a2f50; border: 2px solid #2a4a7a; border-radius: 10px; color: #fff; font-size: 16px; padding: 12px 16px; outline: none; margin-bottom: 12px; transition: border-color 0.2s; }
+  .login-input:focus { border-color: #d4af37; }
+  .login-btn { width: 100%; background: linear-gradient(135deg, #d4af37, #b8942e); color: #0a1628; border: none; border-radius: 10px; font-size: 16px; font-weight: 800; padding: 14px; cursor: pointer; }
+
+  /* ADMIN UI */
+  .admin-screen { display: none; }
+  .header { background: linear-gradient(135deg, #0a1628 0%, #1a3a6b 50%, #0a1628 100%); border-bottom: 3px solid #d4af37; padding: 20px; text-align: center; }
+  .header h1 { font-size: 18px; font-weight: 900; color: #fff; }
+  .header p { font-size: 12px; color: #8ba0bf; margin-top: 4px; }
+
+  .content { max-width: 640px; margin: 0 auto; padding: 16px 16px 80px; }
+
+  /* API FETCH BTN */
+  .api-card { background: #0f1e35; border: 1px solid #1e3356; border-radius: 14px; padding: 18px; margin-bottom: 20px; }
+  .api-card h2 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .api-card p { font-size: 12px; color: #5a7a9a; margin-bottom: 12px; }
+  .btn-api { background: #1a3a6b; border: 1px solid #2a5a9b; color: #7fafd9; border-radius: 8px; font-size: 13px; font-weight: 700; padding: 10px 16px; cursor: pointer; margin-right: 8px; margin-bottom: 8px; -webkit-tap-highlight-color: transparent; }
+  .btn-api:active { opacity: 0.8; }
+  .btn-recalc { background: linear-gradient(135deg, #d4af37, #b8942e); border: none; color: #0a1628; border-radius: 8px; font-size: 13px; font-weight: 800; padding: 10px 16px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+
+  /* MATCHS */
+  .group-block { margin-bottom: 20px; background: #0f1e35; border-radius: 14px; overflow: hidden; border: 1px solid #1e3356; }
+  .group-header { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: linear-gradient(90deg, #1a3a6b, #0f2245); border-bottom: 2px solid #d4af37; }
+  .group-letter { background: #d4af37; color: #0a1628; font-weight: 900; font-size: 14px; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .group-name { font-weight: 700; font-size: 14px; color: #fff; }
+
+  .match-admin { padding: 10px 14px; border-bottom: 1px solid #162b47; }
+  .match-admin:last-child { border-bottom: none; }
+  .match-admin-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .match-admin-date { font-size: 10px; color: #5a7a9a; text-transform: uppercase; min-width: 52px; flex-shrink: 0; }
+  .match-admin-teams { flex: 1; display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 700; justify-content: center; pointer-events: none; }
+  .team-adm { flex: 1; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #dce8f5; }
+  .team-adm.away { text-align: left; }
+  .flag-adm { font-size: 15px; flex-shrink: 0; }
+  .vs-adm { font-size: 9px; color: #3a5a7a; font-weight: 700; }
+
+  .score-admin-row { display: flex; align-items: center; gap: 8px; padding-left: 60px; }
+  .score-admin-box { width: 44px; height: 36px; background: #1a2f50; border: 2px solid #2a4a7a; border-radius: 8px; color: #fff; font-size: 16px; font-weight: 700; text-align: center; outline: none; transition: border-color 0.2s; }
+  .score-admin-box:focus { border-color: #d4af37; }
+  .score-admin-dash { color: #4a6a8a; font-weight: 700; }
+  .save-match-btn { background: #1e6b3a; border: 1px solid #2ea55a; color: #7fdc9f; border-radius: 6px; font-size: 11px; font-weight: 700; padding: 6px 12px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .save-match-btn:active { opacity: 0.8; }
+  .delete-match-btn { background: #3a1a1a; border: 1px solid #8b3030; color: #e07070; border-radius: 6px; font-size: 11px; font-weight: 700; padding: 6px 10px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .delete-match-btn:active { opacity: 0.8; }
+  .match-status { font-size: 10px; padding: 3px 8px; border-radius: 4px; flex-shrink: 0; }
+  .phase-toggle { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #1a2f50; border: 1px solid #2a4a7a; border-radius: 12px; cursor: pointer; margin-bottom: 12px; -webkit-tap-highlight-color: transparent; user-select: none; }
+  .phase-toggle.active { background: linear-gradient(90deg, rgba(212,175,55,0.15), #1a2f50); border-color: #d4af37; }
+  .phase-toggle-title { font-size: 14px; font-weight: 700; color: #fff; }
+  .phase-toggle-sub { font-size: 11px; color: #8ba0bf; margin-top: 2px; }
+  .phase-toggle-chevron { font-size: 16px; color: #5a7a9a; transition: transform 0.2s; }
+  .phase-toggle-chevron.open { transform: rotate(90deg); }
+  .phase-body { display: none; }
+  .phase-body.open { display: block; }
+  .match-status.done { background: rgba(46,165,90,0.2); color: #7fdc9f; border: 1px solid rgba(46,165,90,0.3); }
+  .match-status.pending { background: rgba(90,122,154,0.2); color: #5a7a9a; border: 1px solid rgba(90,122,154,0.3); }
+
+  /* PARTICIPANTS */
+  .participants-card { background: #0f1e35; border: 1px solid #1e3356; border-radius: 14px; padding: 16px; margin-bottom: 20px; }
+  .participants-card h2 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 12px; }
+  .participant-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #162b47; }
+  .participant-item:last-child { border-bottom: none; }
+  .p-pseudo { flex: 1; font-size: 14px; font-weight: 600; color: #fff; }
+  .p-email { font-size: 11px; color: #5a7a9a; }
+  .p-pts { font-size: 16px; font-weight: 900; color: #d4af37; }
+
+  .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #2ea55a; color: #fff; padding: 10px 22px; border-radius: 30px; font-weight: 700; font-size: 14px; z-index: 300; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; }
+
+  .spinner-sm { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 4px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .section-title { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #5a7a9a; margin: 20px 0 10px; }
+
+  /* RECAP */
+  .btn-recap { background: #1a3a6b; border: 1px solid #2a5a9b; color: #7fafd9; border-radius: 6px; font-size: 11px; font-weight: 700; padding: 5px 10px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .recap-overlay { display: none; position: fixed; inset: 0; background: rgba(5,12,25,0.95); z-index: 200; overflow-y: auto; padding: 20px; }
+  .recap-overlay.open { display: block; }
+  .recap-modal { background: #0f1e35; border: 2px solid #d4af37; border-radius: 16px; max-width: 520px; margin: 0 auto; padding: 24px; }
+  .recap-modal h2 { font-size: 18px; font-weight: 900; color: #d4af37; margin-bottom: 4px; }
+  .recap-modal .recap-email { font-size: 11px; color: #5a7a9a; margin-bottom: 16px; }
+  .recap-pre { background: #071220; border: 1px solid #1e3356; border-radius: 10px; padding: 14px; font-size: 11px; color: #a0c0df; white-space: pre-wrap; word-break: break-word; max-height: 60vh; overflow-y: auto; line-height: 1.7; font-family: monospace; }
+  .recap-actions { display: flex; gap: 10px; margin-top: 14px; }
+  .recap-btn { flex: 1; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; border: none; }
+  .recap-btn.primary { background: #d4af37; color: #0a1628; }
+  .recap-btn.secondary { background: #1a2f50; color: #8ba0bf; border: 2px solid #2a4a7a; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div style="font-size:40px">⚙️</div>
+    <h1>Interface Admin</h1>
+    <p>Groupe Welsch · CDM 2026</p>
+    <input type="password" class="login-input" id="pwdInput" placeholder="Mot de passe admin" onkeydown="if(event.key==='Enter')checkPwd()" />
+    <button class="login-btn" onclick="checkPwd()">Accéder</button>
+    <p style="margin-top:12px;font-size:11px;color:#3a5a7a" id="pwdError"></p>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div class="admin-screen" id="adminScreen">
+  <div class="header">
+    <h1>⚙️ Admin CDM 2026</h1>
+    <p>Groupe Welsch · Gestion des résultats</p>
+  </div>
+
+  <div class="content">
+
+    <!-- ACTIONS GLOBALES -->
+    <div class="api-card">
+      <h2>🤖 Mise à jour automatique des scores</h2>
+      <p>Récupère les résultats des matchs joués et recalcule tous les points automatiquement.</p>
+      <button class="btn-api" onclick="fetchResultats()">🔄 Récupérer résultats CDM</button>
+      <button class="btn-recalc" onclick="recalculerTousLesPoints()">⚡ Recalculer tous les points</button>
+      <button class="btn-api" onclick="recalculComplet()" style="background:#3a1a6b;border-color:#6a3aab;color:#c09fdf;margin-top:8px;display:block;width:100%">🔁 Recalcul complet (toutes phases)</button>
+    </div>
+
+    <!-- PARTICIPANTS -->
+    <div class="phase-toggle" onclick="toggleSection('participantsBody','chevParticipants')">
+      <div><div class="phase-toggle-title">👥 Participants inscrits</div><div class="phase-toggle-sub">Classement &amp; points</div></div>
+      <span class="phase-toggle-chevron" id="chevParticipants">›</span>
+    </div>
+    <div class="phase-body" id="participantsBody">
+      <div class="participants-card">
+        <div id="participantsList"><p style="color:#5a7a9a;font-size:13px">Chargement...</p></div>
+      </div>
+    </div>
+
+    <!-- RÉCAP PRONOSTICS -->
+    <div class="phase-toggle" onclick="toggleSection('recapBody','chevRecap')">
+      <div><div class="phase-toggle-title">📋 Récapitulatif pronostics</div><div class="phase-toggle-sub">Voir les pronostics par participant</div></div>
+      <span class="phase-toggle-chevron" id="chevRecap">›</span>
+    </div>
+    <div class="phase-body" id="recapBody">
+      <div class="participants-card">
+        <p style="font-size:12px;color:#5a7a9a;margin-bottom:12px">Clique sur un participant pour voir et copier ses pronostics complets.</p>
+        <div id="recapList"><p style="color:#5a7a9a;font-size:13px">Chargement...</p></div>
+      </div>
+    </div>
+
+    <!-- SAISIE MANUELLE RÉSULTATS -->
+    <div class="phase-toggle" onclick="toggleSection('matchsP1Body','chevMatchsP1')">
+      <div><div class="phase-toggle-title">⚽ Résultats Phase 1 – Poules</div><div class="phase-toggle-sub">Matchs de groupe · Cliquer pour déplier</div></div>
+      <span class="phase-toggle-chevron" id="chevMatchsP1">›</span>
+    </div>
+    <div class="phase-body" id="matchsP1Body">
+      <div id="matchsAdminP1"></div>
+    </div>
+
+    <div class="phase-toggle" onclick="toggleSection('matchsP2Body','chevMatchsP2')">
+      <div><div class="phase-toggle-title">⚡ Résultats Phase 2 – 16es de finale</div><div class="phase-toggle-sub">Cliquer pour déplier</div></div>
+      <span class="phase-toggle-chevron" id="chevMatchsP2">›</span>
+    </div>
+    <div class="phase-body" id="matchsP2Body">
+      <div id="matchsAdminP2"></div>
+    </div>
+
+    <div class="phase-toggle" onclick="toggleSection('matchsP3Body','chevMatchsP3')">
+      <div><div class="phase-toggle-title">🔥 Résultats Phase 3 – 8es de finale</div><div class="phase-toggle-sub">Cliquer pour déplier</div></div>
+      <span class="phase-toggle-chevron" id="chevMatchsP3">›</span>
+    </div>
+    <div class="phase-body" id="matchsP3Body">
+      <div id="matchsAdminP3"></div>
+    </div>
+
+    <div class="phase-toggle" onclick="toggleSection('matchsP4Body','chevMatchsP4')">
+      <div><div class="phase-toggle-title">🏆 Résultats Phase 4 – Quarts de finale</div><div class="phase-toggle-sub">Cliquer pour déplier</div></div>
+      <span class="phase-toggle-chevron" id="chevMatchsP4">›</span>
+    </div>
+    <div class="phase-body" id="matchsP4Body">
+      <div id="matchsAdminP4"></div>
+    </div>
+
+    <div class="phase-toggle active" onclick="toggleSection('matchsP6Body','chevMatchsP6')">
+      <div><div class="phase-toggle-title">⚔️ Résultats Phase 6 – Demi-finales</div><div class="phase-toggle-sub">Phase en cours</div></div>
+      <span class="phase-toggle-chevron open" id="chevMatchsP6">›</span>
+    </div>
+    <div class="phase-body open" id="matchsP6Body">
+      <div id="matchsAdminP6"></div>
+    </div>
+
+    <div class="phase-toggle" onclick="toggleSection('matchsP78Body','chevMatchsP78')">
+      <div><div class="phase-toggle-title">🥉🏆 Petite Finale & Grande Finale</div><div class="phase-toggle-sub">Équipes à définir après les demies</div></div>
+      <span class="phase-toggle-chevron" id="chevMatchsP78">›</span>
+    </div>
+    <div class="phase-body" id="matchsP78Body">
+      <div style="padding:12px;background:#0f1e35;border-radius:10px;margin:8px 0">
+        <div style="font-size:12px;color:#5a7a9a;margin-bottom:12px">Renseigne les équipes une fois les demi-finales jouées</div>
+        <div style="font-size:13px;font-weight:600;color:#8ba0bf;margin-bottom:8px">🥉 Petite finale (18 juil. 23h00)</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input id="p7home" placeholder="Perdant demie 1" value="France" style="flex:1;background:#162b47;border:1px solid #2a4a6a;border-radius:8px;padding:8px;color:#fff;font-size:13px">
+          <input id="p7away" placeholder="Perdant demie 2" value="Angleterre" style="flex:1;background:#162b47;border:1px solid #2a4a6a;border-radius:8px;padding:8px;color:#fff;font-size:13px">
+        </div>
+        <div style="font-size:13px;font-weight:600;color:#d4af37;margin-bottom:8px">🏆 Grande finale (19 juil. 21h00)</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input id="p8home" placeholder="Vainqueur demie 1" value="Argentine" style="flex:1;background:#162b47;border:1px solid #2a4a6a;border-radius:8px;padding:8px;color:#fff;font-size:13px">
+          <input id="p8away" placeholder="Vainqueur demie 2" value="Espagne" style="flex:1;background:#162b47;border:1px solid #2a4a6a;border-radius:8px;padding:8px;color:#fff;font-size:13px">
+        </div>
+        <button onclick="saveFinaleTeams()" style="width:100%;background:#d4af37;color:#0a1628;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer">💾 Enregistrer les équipes</button>
+        <div id="finaleTeamsResult" style="margin-top:8px;font-size:12px;color:#5a7a9a"></div>
+      </div>
+      <div id="matchsAdminP78"></div>
+    </div>
+
+    <div class="phase-toggle active" onclick="toggleSection('boosterBody','chevBooster')">
+      <div><div class="phase-toggle-title">🚀 Booster · La Finale</div><div class="phase-toggle-sub">Résultat de la finale pour calcul des points</div></div>
+      <span class="phase-toggle-chevron open" id="chevBooster">›</span>
+    </div>
+    <div class="phase-body open" id="boosterBody">
+      <div style="padding:16px;background:#0f1e35;border-radius:12px;margin:8px 0">
+        <div style="font-size:13px;color:#8ba0bf;margin-bottom:12px;font-weight:600">🏆 Équipes finalistes réelles</div>
+        <div style="display:flex;gap:10px;margin-bottom:12px">
+          <div style="flex:1;background:#0d3320;border:1px solid #2a6a40;border-radius:8px;padding:10px;color:#4ade80;font-size:14px;font-weight:700;text-align:center">🇪🇸 Espagne</div>
+          <div style="flex:1;background:#0d3320;border:1px solid #2a6a40;border-radius:8px;padding:10px;color:#4ade80;font-size:14px;font-weight:700;text-align:center">🇦🇷 Argentine</div>
+        </div>
+        <div style="font-size:13px;color:#8ba0bf;margin-bottom:8px;font-weight:600">⚽ Score final</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <input type="number" id="boosterScore1" min="0" max="20" placeholder="?" style="width:70px;background:#162b47;border:1px solid #2a4a6a;border-radius:8px;padding:10px;color:#fff;font-size:18px;text-align:center">
+          <span style="color:#5a7a9a;font-weight:700">–</span>
+          <input type="number" id="boosterScore2" min="0" max="20" placeholder="?" style="width:70px;background:#162b47;border:1px solid #2a4a6a;border-radius:8px;padding:10px;color:#fff;font-size:18px;text-align:center">
+          <select id="boosterResult" style="flex:1;background:#162b47;border:1px solid #2a4a6a;border-radius:8px;padding:10px;color:#e8edf5;font-size:13px">
+            <option value="">Vainqueur</option>
+            <option value="1">Équipe 1 gagne</option>
+            <option value="N">Match nul</option>
+            <option value="2">Équipe 2 gagne</option>
+          </select>
+        </div>
+        <button onclick="calcBooster()" style="width:100%;background:#d4af37;color:#0a1628;border:none;border-radius:8px;padding:12px;font-size:13px;font-weight:700;cursor:pointer">🚀 Calculer les points Booster</button>
+        <div id="boosterResult2" style="margin-top:10px;font-size:12px;color:#5a7a9a"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- RECAP MODAL -->
+<div class="recap-overlay" id="recapOverlay">
+  <div class="recap-modal">
+    <h2 id="recapName"></h2>
+    <div class="recap-email" id="recapEmail"></div>
+    <pre class="recap-pre" id="recapContent"></pre>
+    <div class="recap-actions">
+      <button class="recap-btn primary" onclick="copyRecap()">📋 Copier</button>
+      <button class="recap-btn secondary" onclick="closeRecap()">✕ Fermer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://fafqylzoegiuvzqjfeea.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZhZnF5bHpvZWdpdXZ6cWpmZWVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExNzQxMDQsImV4cCI6MjA5Njc1MDEwNH0.T3YxIsSMTyVoXvcM2jq5cPWBPGuUVKY8Ss4vvLyLzd8';
+const ADMIN_PWD = 'Welsch2026!';
+
+const MATCHES_P2 = [
+  {id:'R1_1',  date:'28 juin',  home:'🇿🇦 Afrique du Sud', away:'🇨🇦 Canada',      phase:2},
+  {id:'R1_14', date:'29 juin',  home:'🇧🇷 Brésil',         away:'🇯🇵 Japon',        phase:2},
+  {id:'R1_10', date:'29 juin',  home:'🇩🇪 Allemagne',      away:'🇵🇾 Paraguay',     phase:2},
+  {id:'R1_2',  date:'30 juin',  home:'🇳🇱 Pays-Bas',       away:'🇲🇦 Maroc',        phase:2},
+  {id:'R1_3',  date:'30 juin',  home:"🇨🇮 Côte d'Ivoire",  away:'🇳🇴 Norvège',      phase:2},
+  {id:'R1_4',  date:'30 juin',  home:'🇫🇷 France',         away:'🇸🇪 Suède',        phase:2},
+  {id:'R1_7',  date:'1 juil.', home:'🇲🇽 Mexique',        away:'🇪🇨 Équateur',     phase:2},
+  {id:'R1_6',  date:'1 juil.', home:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Angleterre',    away:'🇨🇩 RD Congo',    phase:2},
+  {id:'R1_5',  date:'1 juil.', home:'🇧🇪 Belgique',       away:'🇸🇳 Sénégal',      phase:2},
+  {id:'R1_8',  date:'2 juil.', home:'🇺🇸 États-Unis',     away:'🇧🇦 Bosnie',       phase:2},
+  {id:'R1_9',  date:'2 juil.', home:'🇪🇸 Espagne',        away:'🇦🇹 Autriche',     phase:2},
+  {id:'R1_13', date:'3 juil.', home:'🇵🇹 Portugal',       away:'🇭🇷 Croatie',      phase:2},
+  {id:'R1_11', date:'3 juil.', home:'🇨🇭 Suisse',         away:'🇩🇿 Algérie',      phase:2},
+  {id:'R1_12', date:'3 juil.', home:'🇦🇺 Australie',      away:'🇪🇬 Égypte',       phase:2},
+  {id:'R1_16', date:'4 juil.', home:'🇦🇷 Argentine',      away:'🇨🇻 Cap-Vert',     phase:2},
+  {id:'R1_15', date:'4 juil.', home:'🇨🇴 Colombie',       away:'🇬🇭 Ghana',        phase:2},
+];
+
+const MATCHES_P3 = [
+  {id:'R2_1', date:'4 juil.',  home:'🇨🇦 Canada',      away:'🇲🇦 Maroc',          phase:3},
+  {id:'R2_2', date:'4 juil.',  home:'🇵🇾 Paraguay',    away:'🇫🇷 France',          phase:3},
+  {id:'R2_3', date:'5 juil.',  home:'🇧🇷 Brésil',      away:'🇳🇴 Norvège',         phase:3},
+  {id:'R2_4', date:'6 juil.',  home:'🇲🇽 Mexique',     away:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Angleterre',    phase:3},
+  {id:'R2_5', date:'6 juil.',  home:'🇵🇹 Portugal',    away:'🇪🇸 Espagne',         phase:3},
+  {id:'R2_6', date:'7 juil.',  home:'🇺🇸 États-Unis',  away:'🇧🇪 Belgique',        phase:3},
+  {id:'R2_7', date:'7 juil.',  home:'🇦🇷 Argentine',   away:'🇪🇬 Égypte',          phase:3},
+  {id:'R2_8', date:'7 juil.',  home:'🇨🇭 Suisse',      away:'🇨🇴 Colombie',        phase:3},
+];
+
+const MATCHES_P4 = [
+  {id:'R3_1', date:'9 juil.',   home:'🇫🇷 France',     away:'🇲🇦 Maroc',        phase:4},
+  {id:'R3_2', date:'10 juil.',  home:'🇪🇸 Espagne',    away:'🇧🇪 Belgique',     phase:4},
+  {id:'R3_3', date:'11 juil.',  home:'🇳🇴 Norvège',    away:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Angleterre',  phase:4},
+  {id:'R3_4', date:'12 juil.',  home:'🇦🇷 Argentine',  away:'🇨🇭 Suisse',      phase:4},
+];
+
+const MATCHES_P6 = [
+  {id:'R4_1', date:'14 juil.',  home:'🇫🇷 France',      away:'🇪🇸 Espagne',    phase:6},
+  {id:'R4_2', date:'15 juil.',  home:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Angleterre', away:'🇦🇷 Argentine',  phase:6},
+];
+
+// Équipes finales
+let MATCH_P7 = {id:'R5_1', date:'18 juil.', home:'France', away:'Angleterre', phase:7};
+let MATCH_P8 = {id:'R5_2', date:'19 juil.', home:'Argentine', away:'Espagne', phase:8};
+
+const GROUPS = [
+  { letter: 'A', teams: ['🇲🇽 Mexique', '🇰🇷 Corée du Sud', '🇿🇦 Afrique du Sud', '🇨🇿 Tchéquie'], matches: [
+    {id:'A1',date:'11 juin',home:'🇲🇽 Mexique',away:'🇿🇦 Afrique du Sud'},
+    {id:'A2',date:'12 juin',home:'🇰🇷 Corée du Sud',away:'🇨🇿 Tchéquie'},
+    {id:'A3',date:'18 juin',home:'🇨🇿 Tchéquie',away:'🇿🇦 Afrique du Sud'},
+    {id:'A4',date:'19 juin',home:'🇲🇽 Mexique',away:'🇰🇷 Corée du Sud'},
+    {id:'A5',date:'25 juin',home:'🇨🇿 Tchéquie',away:'🇲🇽 Mexique'},
+    {id:'A6',date:'25 juin',home:'🇿🇦 Afrique du Sud',away:'🇰🇷 Corée du Sud'}]},
+  { letter: 'B', teams: ['🇨🇦 Canada', '🇧🇦 Bosnie', '🇨🇭 Suisse', '🇶🇦 Qatar'], matches: [
+    {id:'B1',date:'12 juin',home:'🇨🇦 Canada',away:'🇧🇦 Bosnie'},
+    {id:'B2',date:'13 juin',home:'🇶🇦 Qatar',away:'🇨🇭 Suisse'},
+    {id:'B3',date:'18 juin',home:'🇨🇭 Suisse',away:'🇧🇦 Bosnie'},
+    {id:'B4',date:'19 juin',home:'🇨🇦 Canada',away:'🇶🇦 Qatar'},
+    {id:'B5',date:'24 juin',home:'🇨🇭 Suisse',away:'🇨🇦 Canada'},
+    {id:'B6',date:'24 juin',home:'🇧🇦 Bosnie',away:'🇶🇦 Qatar'}]},
+  { letter: 'C', teams: ['🇧🇷 Brésil', '🇲🇦 Maroc', '🇭🇹 Haïti', '🏴󠁧󠁢󠁳󠁣󠁴󠁿 Écosse'], matches: [
+    {id:'C1',date:'14 juin',home:'🇧🇷 Brésil',away:'🇲🇦 Maroc'},
+    {id:'C2',date:'14 juin',home:'🇭🇹 Haïti',away:'🏴󠁧󠁢󠁳󠁣󠁴󠁿 Écosse'},
+    {id:'C3',date:'20 juin',home:'🏴󠁧󠁢󠁳󠁣󠁴󠁿 Écosse',away:'🇲🇦 Maroc'},
+    {id:'C4',date:'20 juin',home:'🇧🇷 Brésil',away:'🇭🇹 Haïti'},
+    {id:'C5',date:'25 juin',home:'🏴󠁧󠁢󠁳󠁣󠁴󠁿 Écosse',away:'🇧🇷 Brésil'},
+    {id:'C6',date:'25 juin',home:'🇲🇦 Maroc',away:'🇭🇹 Haïti'}]},
+  { letter: 'D', teams: ['🇺🇸 États-Unis', '🇵🇾 Paraguay', '🇦🇺 Australie', '🇹🇷 Turquie'], matches: [
+    {id:'D1',date:'13 juin',home:'🇺🇸 États-Unis',away:'🇵🇾 Paraguay'},
+    {id:'D2',date:'14 juin',home:'🇦🇺 Australie',away:'🇹🇷 Turquie'},
+    {id:'D3',date:'19 juin',home:'🇺🇸 États-Unis',away:'🇦🇺 Australie'},
+    {id:'D4',date:'20 juin',home:'🇹🇷 Turquie',away:'🇵🇾 Paraguay'},
+    {id:'D5',date:'26 juin',home:'🇵🇾 Paraguay',away:'🇦🇺 Australie'},
+    {id:'D6',date:'26 juin',home:'🇹🇷 Turquie',away:'🇺🇸 États-Unis'}]},
+  { letter: 'E', teams: ['🇩🇪 Allemagne', "🇨🇮 Côte d\'Ivoire", '🇪🇨 Équateur', '🇨🇼 Curaçao'], matches: [
+    {id:'E1',date:'14 juin',home:'🇩🇪 Allemagne',away:'🇨🇼 Curaçao'},
+    {id:'E2',date:'15 juin',home:"🇨🇮 Côte d\'Ivoire",away:'🇪🇨 Équateur'},
+    {id:'E3',date:'20 juin',home:'🇩🇪 Allemagne',away:"🇨🇮 Côte d\'Ivoire"},
+    {id:'E4',date:'21 juin',home:'🇪🇨 Équateur',away:'🇨🇼 Curaçao'},
+    {id:'E5',date:'25 juin',home:'🇨🇼 Curaçao',away:"🇨🇮 Côte d\'Ivoire"},
+    {id:'E6',date:'25 juin',home:'🇪🇨 Équateur',away:'🇩🇪 Allemagne'}]},
+  { letter: 'F', teams: ['🇳🇱 Pays-Bas', '🇯🇵 Japon', '🇸🇪 Suède', '🇹🇳 Tunisie'], matches: [
+    {id:'F1',date:'14 juin',home:'🇳🇱 Pays-Bas',away:'🇯🇵 Japon'},
+    {id:'F2',date:'15 juin',home:'🇸🇪 Suède',away:'🇹🇳 Tunisie'},
+    {id:'F3',date:'20 juin',home:'🇳🇱 Pays-Bas',away:'🇸🇪 Suède'},
+    {id:'F4',date:'21 juin',home:'🇹🇳 Tunisie',away:'🇯🇵 Japon'},
+    {id:'F5',date:'26 juin',home:'🇯🇵 Japon',away:'🇸🇪 Suède'},
+    {id:'F6',date:'26 juin',home:'🇹🇳 Tunisie',away:'🇳🇱 Pays-Bas'}]},
+  { letter: 'G', teams: ['🇧🇪 Belgique', '🇪🇬 Égypte', '🇮🇷 Iran', '🇳🇿 Nouvelle-Zélande'], matches: [
+    {id:'G1',date:'15 juin',home:'🇧🇪 Belgique',away:'🇪🇬 Égypte'},
+    {id:'G2',date:'16 juin',home:'🇮🇷 Iran',away:'🇳🇿 Nouvelle-Zélande'},
+    {id:'G3',date:'21 juin',home:'🇧🇪 Belgique',away:'🇮🇷 Iran'},
+    {id:'G4',date:'22 juin',home:'🇳🇿 Nouvelle-Zélande',away:'🇪🇬 Égypte'},
+    {id:'G5',date:'27 juin',home:'🇪🇬 Égypte',away:'🇮🇷 Iran'},
+    {id:'G6',date:'27 juin',home:'🇳🇿 Nouvelle-Zélande',away:'🇧🇪 Belgique'}]},
+  { letter: 'H', teams: ['🇪🇸 Espagne', '🇺🇾 Uruguay', '🇸🇦 Arabie Saoudite', '🇨🇻 Cap-Vert'], matches: [
+    {id:'H1',date:'15 juin',home:'🇪🇸 Espagne',away:'🇨🇻 Cap-Vert'},
+    {id:'H2',date:'16 juin',home:'🇺🇾 Uruguay',away:'🇸🇦 Arabie Saoudite'},
+    {id:'H3',date:'21 juin',home:'🇪🇸 Espagne',away:'🇸🇦 Arabie Saoudite'},
+    {id:'H4',date:'22 juin',home:'🇺🇾 Uruguay',away:'🇨🇻 Cap-Vert'},
+    {id:'H5',date:'27 juin',home:'🇨🇻 Cap-Vert',away:'🇸🇦 Arabie Saoudite'},
+    {id:'H6',date:'27 juin',home:'🇺🇾 Uruguay',away:'🇪🇸 Espagne'}]},
+  { letter: 'I', teams: ['🇫🇷 France', '🇸🇳 Sénégal', '🇳🇴 Norvège', '🇮🇶 Irak'], matches: [
+    {id:'I1',date:'16 juin',home:'🇫🇷 France',away:'🇸🇳 Sénégal'},
+    {id:'I2',date:'17 juin',home:'🇮🇶 Irak',away:'🇳🇴 Norvège'},
+    {id:'I3',date:'22 juin',home:'🇫🇷 France',away:'🇮🇶 Irak'},
+    {id:'I4',date:'23 juin',home:'🇳🇴 Norvège',away:'🇸🇳 Sénégal'},
+    {id:'I5',date:'26 juin',home:'🇳🇴 Norvège',away:'🇫🇷 France'},
+    {id:'I6',date:'26 juin',home:'🇸🇳 Sénégal',away:'🇮🇶 Irak'}]},
+  { letter: 'J', teams: ['🇦🇷 Argentine', '🇩🇿 Algérie', '🇦🇹 Autriche', '🇯🇴 Jordanie'], matches: [
+    {id:'J1',date:'17 juin',home:'🇦🇷 Argentine',away:'🇩🇿 Algérie'},
+    {id:'J2',date:'17 juin',home:'🇦🇹 Autriche',away:'🇯🇴 Jordanie'},
+    {id:'J3',date:'22 juin',home:'🇦🇷 Argentine',away:'🇦🇹 Autriche'},
+    {id:'J4',date:'23 juin',home:'🇯🇴 Jordanie',away:'🇩🇿 Algérie'},
+    {id:'J5',date:'28 juin',home:'🇩🇿 Algérie',away:'🇦🇹 Autriche'},
+    {id:'J6',date:'28 juin',home:'🇯🇴 Jordanie',away:'🇦🇷 Argentine'}]},
+  { letter: 'K', teams: ['🇵🇹 Portugal', '🇨🇩 RD Congo', '🇺🇿 Ouzbékistan', '🇨🇴 Colombie'], matches: [
+    {id:'K1',date:'17 juin',home:'🇵🇹 Portugal',away:'🇨🇩 RD Congo'},
+    {id:'K2',date:'18 juin',home:'🇺🇿 Ouzbékistan',away:'🇨🇴 Colombie'},
+    {id:'K3',date:'23 juin',home:'🇵🇹 Portugal',away:'🇺🇿 Ouzbékistan'},
+    {id:'K4',date:'24 juin',home:'🇨🇴 Colombie',away:'🇨🇩 RD Congo'},
+    {id:'K5',date:'28 juin',home:'🇨🇴 Colombie',away:'🇵🇹 Portugal'},
+    {id:'K6',date:'28 juin',home:'🇨🇩 RD Congo',away:'🇺🇿 Ouzbékistan'}]},
+  { letter: 'L', teams: ['🏴󠁧󠁢󠁥󠁮󠁧󠁿 Angleterre', '🇭🇷 Croatie', '🇬🇭 Ghana', '🇵🇦 Panama'], matches: [
+    {id:'L1',date:'17 juin',home:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Angleterre',away:'🇭🇷 Croatie'},
+    {id:'L2',date:'18 juin',home:'🇬🇭 Ghana',away:'🇵🇦 Panama'},
+    {id:'L3',date:'23 juin',home:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Angleterre',away:'🇬🇭 Ghana'},
+    {id:'L4',date:'24 juin',home:'🇵🇦 Panama',away:'🇭🇷 Croatie'},
+    {id:'L5',date:'27 juin',home:'🇵🇦 Panama',away:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Angleterre'},
+    {id:'L6',date:'27 juin',home:'🇭🇷 Croatie',away:'🇬🇭 Ghana'}]}
+];
+
+
+let resultatsDB = {};
+
+function checkPwd() {
+  const pwd = document.getElementById('pwdInput').value;
+  if (pwd === ADMIN_PWD) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminScreen').style.display = 'block';
+    loadAdmin();
+  } else {
+    document.getElementById('pwdError').textContent = '❌ Mot de passe incorrect';
+  }
+}
+
+async function loadAdmin() {
+  await loadParticipants();
+  await loadResultats();
+  renderMatchsAdmin();
+  await loadRecapList();
+  await loadFinaleTeams();
+}
+
+async function loadParticipants() {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/scores?order=total_points.desc`, {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+  });
+  const data = await res.json();
+  const container = document.getElementById('participantsList');
+  if (!data.length) { container.innerHTML = '<p style="color:#5a7a9a;font-size:13px">Aucun participant inscrit.</p>'; return; }
+  container.innerHTML = data.map(p => `
+    <div class="participant-item">
+      <div><div class="p-pseudo">${p.pseudo}</div><div class="p-email">${p.email}</div></div>
+      <div class="p-pts">${p.total_points} pts</div>
+    </div>`).join('');
+}
+
+async function loadResultats() {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/resultats`, {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+  });
+  const data = await res.json();
+  resultatsDB = {};
+  data.forEach(r => { resultatsDB[r.match_id] = r; });
+}
+
+function shortN(t) { return t.replace(/^[^\s]+\s/, ''); }
+function getF(t) { return t.split(' ')[0]; }
+
+function renderMatchsAdmin() {
+  const container = document.getElementById('matchsAdminP1') || document.getElementById('matchsAdmin');
+  if (!container) return;
+  container.innerHTML = '';
+  GROUPS.forEach(g => {
+    const block = document.createElement('div');
+    block.className = 'group-block';
+    block.innerHTML = `<div class="group-header"><div class="group-letter">${g.letter}</div><div class="group-name">Groupe ${g.letter}</div></div>`;
+    g.matches.forEach(m => {
+      const r = resultatsDB[m.id];
+      const isDone = r && r.home_score !== null && r.home_score !== undefined;
+      const row = document.createElement('div');
+      row.className = 'match-admin';
+      row.innerHTML = `
+        <div class="match-admin-top">
+          <div class="match-admin-date">${m.date}</div>
+          <div class="match-admin-teams">
+            <span class="team-adm">${shortN(m.home)}</span>
+            <span class="flag-adm">${getF(m.home)}</span>
+            <span class="vs-adm">vs</span>
+            <span class="flag-adm">${getF(m.away)}</span>
+            <span class="team-adm away">${shortN(m.away)}</span>
+          </div>
+          <span class="match-status ${isDone?'done':'pending'}">${isDone?'✓ '+r.home_score+'-'+r.away_score:'En attente'}</span>
+        </div>
+        <div class="score-admin-row">
+          <input class="score-admin-box" type="number" min="0" max="20" id="ah_${m.id}" placeholder="?" value="${isDone?r.home_score:''}">
+          <span class="score-admin-dash">–</span>
+          <input class="score-admin-box" type="number" min="0" max="20" id="aa_${m.id}" placeholder="?" value="${isDone?r.away_score:''}">
+          <button class="save-match-btn" onclick="saveMatch(this)" data-id="${m.id}" data-home="${m.home}" data-away="${m.away}" data-phase="1">💾 Sauver</button>
+          ${isDone ? `<button class="delete-match-btn" onclick="deleteMatch('${m.id}')">🗑️ Annuler</button>` : ""}
+        </div>`;
+      block.appendChild(row);
+    });
+    container.appendChild(block);
+  });
+
+  // Rendu Phase 2 - 16es de finale
+  const p2container = document.getElementById('matchsAdminP2') || container;
+  p2container.innerHTML = '';
+  const p2block = document.createElement('div');
+  p2block.className = 'group-block';
+  p2block.innerHTML = `<div class="group-header"><div class="group-letter">16</div><div class="group-name">16es de finale</div></div>`;
+  MATCHES_P2.forEach(m => {
+    const r = resultatsDB[m.id];
+    const isDone = r && r.home_score !== null && r.home_score !== undefined;
+    const row = document.createElement('div');
+    row.className = 'match-admin';
+    const homeClean = m.home;
+    const awayClean = m.away;
+    row.innerHTML = `
+      <div class="match-admin-top">
+        <div class="match-admin-date">${m.date}</div>
+        <div class="match-admin-teams">
+          <span class="team-adm">${shortN(m.home)}</span>
+          <span class="flag-adm">${getF(m.home)}</span>
+          <span class="vs-adm">vs</span>
+          <span class="flag-adm">${getF(m.away)}</span>
+          <span class="team-adm away">${shortN(m.away)}</span>
+        </div>
+        <span class="match-status ${isDone?'done':'pending'}">${isDone?'✓ '+r.home_score+'-'+r.away_score:'En attente'}</span>
+      </div>
+      <div class="score-admin-row">
+        <input class="score-admin-box" type="number" min="0" max="20" id="ah_${m.id}" placeholder="?" value="${isDone?r.home_score:''}">
+        <span class="score-admin-dash">–</span>
+        <input class="score-admin-box" type="number" min="0" max="20" id="aa_${m.id}" placeholder="?" value="${isDone?r.away_score:''}">
+        <button class="save-match-btn" onclick="saveMatch(this)" data-id="${m.id}" data-home="${homeClean}" data-away="${awayClean}" data-phase="2">💾 Sauver</button>
+        ${isDone ? `<button class="delete-match-btn" onclick="deleteMatch('${m.id}')">🗑️ Annuler</button>` : ""}
+      </div>`;
+    p2block.appendChild(row);
+  });
+  p2container.appendChild(p2block);
+
+  // Rendu Phase 3 - 8es de finale
+  const p3container = document.getElementById('matchsAdminP3') || container;
+  p3container.innerHTML = '';
+  const p3block = document.createElement('div');
+  p3block.className = 'group-block';
+  p3block.innerHTML = `<div class="group-header"><div class="group-letter">8</div><div class="group-name">8es de finale</div></div>`;
+  MATCHES_P3.forEach(m => {
+    const r = resultatsDB[m.id];
+    const isDone = r && r.home_score !== null && r.home_score !== undefined;
+    const row = document.createElement('div');
+    row.className = 'match-admin';
+    row.innerHTML = `
+      <div class="match-admin-top">
+        <div class="match-admin-date">${m.date}</div>
+        <div class="match-admin-teams">
+          <span class="team-adm">${shortN(m.home)}</span>
+          <span class="flag-adm">${getF(m.home)}</span>
+          <span class="vs-adm">vs</span>
+          <span class="flag-adm">${getF(m.away)}</span>
+          <span class="team-adm away">${shortN(m.away)}</span>
+        </div>
+        <span class="match-status ${isDone?'done':'pending'}">${isDone?'✓ '+r.home_score+'-'+r.away_score:'En attente'}</span>
+      </div>
+      <div class="score-admin-row">
+        <input class="score-admin-box" type="number" min="0" max="20" id="ah_${m.id}" placeholder="?" value="${isDone?r.home_score:''}">
+        <span class="score-admin-dash">–</span>
+        <input class="score-admin-box" type="number" min="0" max="20" id="aa_${m.id}" placeholder="?" value="${isDone?r.away_score:''}">
+        <button class="save-match-btn" onclick="saveMatch(this)" data-id="${m.id}" data-home="${m.home}" data-away="${m.away}" data-phase="3">💾 Sauver</button>
+        ${isDone ? `<button class="delete-match-btn" onclick="deleteMatch('${m.id}')">🗑️ Annuler</button>` : ""}
+      </div>`;
+    p3block.appendChild(row);
+  });
+  p3container.appendChild(p3block);
+
+  // Rendu Phase 4 - Quarts de finale
+  const p4container = document.getElementById('matchsAdminP4') || container;
+  p4container.innerHTML = '';
+  const p4block = document.createElement('div');
+  p4block.className = 'group-block';
+  p4block.innerHTML = `<div class="group-header"><div class="group-letter">QF</div><div class="group-name">Quarts de finale</div></div>`;
+  MATCHES_P4.forEach(m => {
+    const r = resultatsDB[m.id];
+    const isDone = r && r.home_score !== null && r.home_score !== undefined;
+    const row = document.createElement('div');
+    row.className = 'match-admin';
+    row.innerHTML = `
+      <div class="match-admin-top">
+        <div class="match-admin-date">${m.date}</div>
+        <div class="match-admin-teams">
+          <span>${m.home}</span>
+          <span style="color:#5a7a9a;font-size:11px">vs</span>
+          <span>${m.away}</span>
+        </div>
+        <span class="match-status ${isDone?'done':'pending'}">${isDone?'✓ '+r.home_score+'-'+r.away_score:'En attente'}</span>
+      </div>
+      <div class="match-score-zone">
+        <input class="score-admin-box" type="number" min="0" max="20" id="ah_${m.id}" placeholder="?" value="${isDone?r.home_score:''}">
+        <span style="color:#5a7a9a;font-weight:700">–</span>
+        <input class="score-admin-box" type="number" min="0" max="20" id="aa_${m.id}" placeholder="?" value="${isDone?r.away_score:''}">
+        <button class="save-match-btn" onclick="saveMatch(this)" data-id="${m.id}" data-home="${m.home}" data-away="${m.away}" data-phase="4">💾 Sauver</button>
+        ${isDone ? `<button class="delete-match-btn" onclick="deleteMatch('${m.id}')">🗑️ Annuler</button>` : ""}
+      </div>`;
+    p4block.appendChild(row);
+  });
+  p4container.appendChild(p4block);
+
+  // Rendu Phase 6 - Demi-finales
+  const p6container = document.getElementById('matchsAdminP6') || container;
+  p6container.innerHTML = '';
+  const p6block = document.createElement('div');
+  p6block.className = 'group-block';
+  p6block.innerHTML = `<div class="group-header"><div class="group-letter">1/2</div><div class="group-name">Demi-finales</div></div>`;
+  MATCHES_P6.forEach(m => {
+    const r = resultatsDB[m.id];
+    const isDone = r && r.home_score !== null && r.home_score !== undefined;
+    const row = document.createElement('div');
+    row.className = 'match-admin';
+    row.innerHTML = `
+      <div class="match-admin-top">
+        <div class="match-admin-date">${m.date}</div>
+        <div class="match-admin-teams">
+          <span>${m.home}</span>
+          <span style="color:#5a7a9a;font-size:11px">vs</span>
+          <span>${m.away}</span>
+        </div>
+        <span class="match-status ${isDone?'done':'pending'}">${isDone?'✓ '+r.home_score+'-'+r.away_score:'En attente'}</span>
+      </div>
+      <div class="match-score-zone">
+        <input class="score-admin-box" type="number" min="0" max="20" id="ah_${m.id}" placeholder="?" value="${isDone?r.home_score:''}">
+        <span style="color:#5a7a9a;font-weight:700">–</span>
+        <input class="score-admin-box" type="number" min="0" max="20" id="aa_${m.id}" placeholder="?" value="${isDone?r.away_score:''}">
+        <button class="save-match-btn" onclick="saveMatch(this)" data-id="${m.id}" data-home="${m.home}" data-away="${m.away}" data-phase="6">💾 Sauver</button>
+        ${isDone ? `<button class="delete-match-btn" onclick="deleteMatch('${m.id}')">🗑️ Annuler</button>` : ""}
+      </div>`;
+    p6block.appendChild(row);
+  });
+  p6container.appendChild(p6block);
+
+  // Rendu Phase 7/8 - Petite finale & Grande finale
+  const p78container = document.getElementById('matchsAdminP78');
+  if (p78container) {
+    p78container.innerHTML = '';
+    [MATCH_P7, MATCH_P8].forEach(m => {
+      const r = resultatsDB[m.id];
+      const isDone = r && r.home_score !== null && r.home_score !== undefined;
+      const block = document.createElement('div');
+      block.className = 'group-block';
+      block.innerHTML = `<div class="group-header"><div class="group-letter">${m.phase===7?'🥉':'🏆'}</div><div class="group-name">${m.phase===7?'Petite finale':'Grande finale'}</div></div>`;
+      const row = document.createElement('div');
+      row.className = 'match-admin';
+      row.innerHTML = `
+        <div class="match-admin-top">
+          <div class="match-admin-date">${m.date}</div>
+          <div class="match-admin-teams">
+            <span>${m.home}</span>
+            <span style="color:#5a7a9a;font-size:11px">vs</span>
+            <span>${m.away}</span>
+          </div>
+          <span class="match-status ${isDone?'done':'pending'}">${isDone?'✓ '+r.home_score+'-'+r.away_score:'En attente'}</span>
+        </div>
+        <div class="match-score-zone">
+          <input class="score-admin-box" type="number" min="0" max="20" id="ah_${m.id}" placeholder="?" value="${isDone?r.home_score:''}">
+          <span style="color:#5a7a9a;font-weight:700">–</span>
+          <input class="score-admin-box" type="number" min="0" max="20" id="aa_${m.id}" placeholder="?" value="${isDone?r.away_score:''}">
+          <button class="save-match-btn" onclick="saveMatch(this)" data-id="${m.id}" data-home="${m.home}" data-away="${m.away}" data-phase="${m.phase}">💾 Sauver</button>
+          ${isDone ? `<button class="delete-match-btn" onclick="deleteMatch('${m.id}')">🗑️ Annuler</button>` : ""}
+        </div>`;
+      block.appendChild(row);
+      p78container.appendChild(block);
+    });
+  }
+}
+
+async function calcBooster() {
+  if (!confirm('Recalcul complet P1+P2+P3+P4+P6+Booster depuis zero. Continuer ?')) return;
+
+  const FINALE_TEAM1 = 'Espagne';
+  const FINALE_TEAM2 = 'Argentine';
+  const FINALE_SCORE1 = parseInt(document.getElementById('boosterScore1').value);
+  const FINALE_SCORE2 = parseInt(document.getElementById('boosterScore2').value);
+  const FINALE_RESULT = document.getElementById('boosterResult').value;
+
+  document.getElementById('boosterResult2').textContent = 'Recalcul en cours...';
+  showToast('Recalcul en cours...');
+
+  const [allPronRes, allScoresRes, boosterRes] = await Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/pronostics`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+    fetch(`${SUPABASE_URL}/rest/v1/scores`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+    fetch(`${SUPABASE_URL}/rest/v1/pronostics?phase=eq.5`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
+  ]);
+  const allPronos = await allPronRes.json();
+  const allScores = await allScoresRes.json();
+  const boosterPronos = await boosterRes.json();
+
+  const byEmail = {};
+  allPronos.forEach(p => {
+    if (!byEmail[p.email]) byEmail[p.email] = { p1:{}, p2:{}, p3:{}, p4:{}, p6:{} };
+    const ph = p.phase || 1;
+    if (ph === 1) byEmail[p.email].p1 = p.pronos || {};
+    else if (ph === 2) byEmail[p.email].p2 = p.pronos || {};
+    else if (ph === 3) byEmail[p.email].p3 = p.pronos || {};
+    else if (ph === 4) byEmail[p.email].p4 = p.pronos || {};
+    else if (ph === 6) byEmail[p.email].p6 = p.pronos || {};
+  });
+
+  const clean = s => (s || '').replace(/[^a-zA-ZÀ-ÿ\s]/g, '').trim().toLowerCase();
+  const boosterByEmail = {};
+  boosterPronos.forEach(p => {
+    const prono = (p.pronos || {}).FINAL || {};
+    let pts = 0;
+    const pt1 = clean(prono.team1) === clean(FINALE_TEAM1);
+    const pt2 = clean(prono.team2) === clean(FINALE_TEAM2);
+    if (pt1 && pt2) pts += 6;
+    else if (pt1 || pt2) pts += 3;
+    if (!isNaN(FINALE_SCORE1) && !isNaN(FINALE_SCORE2) &&
+        prono.score1 === FINALE_SCORE1 && prono.score2 === FINALE_SCORE2 &&
+        prono.result === FINALE_RESULT) pts += 4;
+    boosterByEmail[p.email] = pts;
+    console.log(p.pseudo, 'team1:', prono.team1, 'clean:', clean(prono.team1), 'match:', pt1, '| team2:', prono.team2, 'clean:', clean(prono.team2), 'match:', pt2, '| pts:', pts);
+  });
+
+  let details = [];
+  for (const score of allScores) {
+    const data = byEmail[score.email] || { p1:{}, p2:{}, p3:{}, p4:{}, p6:{} };
+    const pts1 = calcPointsPhase(data.p1, 1);
+    const pts2 = calcPointsPhase(data.p2, 2);
+    const pts3 = calcPointsPhase(data.p3, 3);
+    const pts4 = calcPointsPhase(data.p4, 4);
+    const pts6 = calcPointsPhase(data.p6, 6);
+    const ptsBooster = boosterByEmail[score.email] || 0;
+    const totalP2plus = pts2 + pts3 + pts4 + pts6 + ptsBooster;
+    const total = pts1 + totalP2plus;
+
+    await fetch(`${SUPABASE_URL}/rest/v1/scores?email=eq.${encodeURIComponent(score.email)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ points_phase1: pts1, points_phase2: totalP2plus, points_booster: ptsBooster, total_points: total, last_updated: new Date().toISOString() })
+    });
+    if (ptsBooster > 0) details.push(`${score.pseudo} +${ptsBooster}pts`);
+  }
+
+  document.getElementById('boosterResult2').textContent = 'Recalcul termine. Boosters : ' + (details.length > 0 ? details.join(', ') : 'aucun');
+  showToast('Recalcul termine !');
+  await loadParticipants();
+}
+
+async function saveFinaleTeams() {
+  const p7home = document.getElementById('p7home').value.trim();
+  const p7away = document.getElementById('p7away').value.trim();
+  const p8home = document.getElementById('p8home').value.trim();
+  const p8away = document.getElementById('p8away').value.trim();
+  if (!p7home || !p7away || !p8home || !p8away) { showToast('⚠️ Remplis les 4 équipes', 'error'); return; }
+
+  // Sauvegarder en base dans resultats avec home_score null (juste pour stocker les équipes)
+  const saves = [
+    { match_id:'R5_1', phase:7, home_team:p7home, away_team:p7away, home_score:null, away_score:null, result:null, updated_at: new Date().toISOString() },
+    { match_id:'R5_2', phase:8, home_team:p8home, away_team:p8away, home_score:null, away_score:null, result:null, updated_at: new Date().toISOString() }
+  ];
+  for (const s of saves) {
+    await fetch(`${SUPABASE_URL}/rest/v1/resultats`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'resolution=merge-duplicates' },
+      body: JSON.stringify(s)
+    });
+  }
+
+  MATCH_P7 = {id:'R5_1', date:'18 juil.', home: p7home, away: p7away, phase:7};
+  MATCH_P8 = {id:'R5_2', date:'19 juil.', home: p8home, away: p8away, phase:8};
+  document.getElementById('finaleTeamsResult').textContent = `✅ Petite finale : ${p7home} vs ${p7away} · Grande finale : ${p8home} vs ${p8away}`;
+  renderMatchsAdmin();
+  showToast('✅ Équipes sauvegardées en base !');
+}
+
+async function loadFinaleTeams() {
+  // Charger les équipes finale depuis la base au démarrage
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/resultats?match_id=in.(R5_1,R5_2)`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    const data = await res.json();
+    data.forEach(r => {
+      if (r.match_id === 'R5_1') {
+        MATCH_P7 = {id:'R5_1', date:'18 juil.', home: r.home_team, away: r.away_team, phase:7};
+        document.getElementById('p7home').value = r.home_team;
+        document.getElementById('p7away').value = r.away_team;
+      }
+      if (r.match_id === 'R5_2') {
+        MATCH_P8 = {id:'R5_2', date:'19 juil.', home: r.home_team, away: r.away_team, phase:8};
+        document.getElementById('p8home').value = r.home_team;
+        document.getElementById('p8away').value = r.away_team;
+      }
+    });
+    if (data.length) {
+      const p7 = data.find(r => r.match_id === 'R5_1');
+      const p8 = data.find(r => r.match_id === 'R5_2');
+      if (p7 && p8) document.getElementById('finaleTeamsResult').textContent = `✅ Petite finale : ${p7.home_team} vs ${p7.away_team} · Grande finale : ${p8.home_team} vs ${p8.away_team}`;
+      renderMatchsAdmin();
+    }
+  } catch(e) {}
+}
+
+async function saveMatch(btn) {
+  const matchId = btn.dataset.id;
+  const home = btn.dataset.home;
+  const away = btn.dataset.away;
+  const phase = parseInt(btn.dataset.phase);
+  const h = parseInt(document.getElementById('ah_'+matchId).value);
+  const a = parseInt(document.getElementById('aa_'+matchId).value);
+  if (isNaN(h) || isNaN(a)) { showToast('⚠️ Saisis les deux scores', 'error'); return; }
+  const result = h > a ? '1' : a > h ? '2' : 'N';
+
+  const payload = { match_id: matchId, phase, home_team: home, away_team: away, home_score: h, away_score: a, result, updated_at: new Date().toISOString() };
+
+  const exists = resultatsDB[matchId];
+  const method = exists ? 'PATCH' : 'POST';
+  const url = exists ? `${SUPABASE_URL}/rest/v1/resultats?match_id=eq.${matchId}` : `${SUPABASE_URL}/rest/v1/resultats`;
+
+  const res = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' },
+    body: JSON.stringify(payload)
+  });
+
+  if (res.ok) {
+    resultatsDB[matchId] = payload;
+    showToast(`✅ ${matchId} sauvé · ${h}-${a} [${result}]`);
+    renderMatchsAdmin();
+    await recalculerTousLesPoints();
+  } else {
+    showToast('❌ Erreur sauvegarde', 'error');
+  }
+}
+
+async function fetchResultats() {
+  showToast('🔄 Récupération en cours...');
+  // API football-data.org (CDM 2026 - Competition ID 2000)
+  try {
+    const res = await fetch('https://api.football-data.org/v4/competitions/2000/matches?status=FINISHED', {
+      headers: { 'X-Auth-Token': 'VOTRE_CLE_API_ICI' }
+    });
+    if (!res.ok) { showToast('⚠️ Configure ta clé API football-data.org', 'error'); return; }
+    const data = await res.json();
+    let count = 0;
+    for (const match of (data.matches || [])) {
+      const h = match.score.fullTime.home;
+      const a = match.score.fullTime.away;
+      if (h === null || a === null) continue;
+      const matchId = findMatchId(match.homeTeam.name, match.awayTeam.name);
+      if (!matchId) continue;
+      await saveMatchDirect(matchId, match.homeTeam.name, match.awayTeam.name, h, a, 1);
+      count++;
+    }
+    showToast(`✅ ${count} résultat(s) mis à jour`);
+    await loadResultats();
+    renderMatchsAdmin();
+    await recalculerTousLesPoints();
+  } catch(e) {
+    showToast('⚠️ Configure ta clé API football-data.org', 'error');
+  }
+}
+
+function findMatchId(homeName, awayName) {
+  for (const g of GROUPS) {
+    for (const m of g.matches) {
+      const h = shortN(m.home).toLowerCase();
+      const a = shortN(m.away).toLowerCase();
+      if (homeName.toLowerCase().includes(h.slice(0,4)) && awayName.toLowerCase().includes(a.slice(0,4))) return m.id;
+    }
+  }
+  return null;
+}
+
+async function saveMatchDirect(matchId, home, away, h, a, phase) {
+  const result = h > a ? '1' : a > h ? '2' : 'N';
+  const payload = { match_id: matchId, phase, home_team: home, away_team: away, home_score: h, away_score: a, result, updated_at: new Date().toISOString() };
+  const exists = resultatsDB[matchId];
+  const method = exists ? 'PATCH' : 'POST';
+  const url = exists ? `${SUPABASE_URL}/rest/v1/resultats?match_id=eq.${matchId}` : `${SUPABASE_URL}/rest/v1/resultats`;
+  await fetch(url, { method, headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' }, body: JSON.stringify(payload) });
+  resultatsDB[matchId] = payload;
+}
+
+async function deleteMatch(matchId) {
+  if (!confirm(`Supprimer le résultat du match ${matchId} ?`)) return;
+
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/resultats?match_id=eq.${matchId}`, {
+    method: 'DELETE',
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' }
+  });
+
+  if (res.ok) {
+    delete resultatsDB[matchId];
+    showToast(`✅ Résultat ${matchId} supprimé`);
+    renderMatchsAdmin();
+    await recalculerTousLesPoints();
+  } else {
+    showToast('❌ Erreur suppression', 'error');
+  }
+}
+
+// Calcule les points d'un set de pronos pour une phase donnée
+function calcPointsPhase(pronos, phase) {
+  let pts = 0;
+  for (const [matchId, prono] of Object.entries(pronos)) {
+    const reel = resultatsDB[matchId];
+    if (!reel || reel.home_score === null) continue;
+    if (parseInt(reel.phase || 1) !== parseInt(phase)) continue;
+    const reelResult = reel.home_score > reel.away_score ? '1' : reel.away_score > reel.home_score ? '2' : 'N';
+    const ph = prono.home !== '' && prono.home !== null ? parseInt(prono.home) : null;
+    const pa = prono.away !== '' && prono.away !== null ? parseInt(prono.away) : null;
+    if (ph !== null && pa !== null && !isNaN(ph) && !isNaN(pa) && ph === reel.home_score && pa === reel.away_score) {
+      pts += 3;
+    } else if (prono.result && prono.result === reelResult) {
+      pts += 1;
+    }
+  }
+  return pts;
+}
+
+// Recalcul P2 uniquement — préserve les points P1 en base
+async function recalculerTousLesPoints() {
+  showToast('⚡ Calcul des points en cours...');
+  // Recalcul complet P1+P2+P3 pour être sûr
+  await recalculComplet();
+}
+
+// Recalcul complet P1+P2+P3 — à utiliser pour restaurer tous les points
+async function recalculComplet() {
+  if (!confirm('Recalcul complet P1+P2+P3 depuis tous les pronostics et résultats. Continuer ?')) return;
+  showToast('🔁 Recalcul complet en cours...');
+
+  const [allPronRes, allScoresRes] = await Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/pronostics`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }),
+    fetch(`${SUPABASE_URL}/rest/v1/scores`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
+  ]);
+  const allPronos = await allPronRes.json();
+  const allScores = await allScoresRes.json();
+
+  // Grouper pronos par email et phase
+  const byEmail = {};
+  allPronos.forEach(p => {
+    if (!byEmail[p.email]) byEmail[p.email] = { p1: {}, p2: {}, p3: {}, p4: {}, p6: {} };
+    const ph = p.phase || 1;
+    if (ph === 1) byEmail[p.email].p1 = p.pronos || {};
+    else if (ph === 2) byEmail[p.email].p2 = p.pronos || {};
+    else if (ph === 3) byEmail[p.email].p3 = p.pronos || {};
+    else if (ph === 4) byEmail[p.email].p4 = p.pronos || {};
+    else if (ph === 6) byEmail[p.email].p6 = p.pronos || {};
+  });
+
+  for (const score of allScores) {
+    const data = byEmail[score.email] || { p1: {}, p2: {}, p3: {}, p4: {} };
+    const pts1 = calcPointsPhase(data.p1, 1);
+    const pts2 = calcPointsPhase(data.p2, 2);
+    const pts3 = calcPointsPhase(data.p3, 3);
+    const pts4 = calcPointsPhase(data.p4, 4);
+    const pts6 = calcPointsPhase(data.p6 || {}, 6);
+    await fetch(`${SUPABASE_URL}/rest/v1/scores?email=eq.${encodeURIComponent(score.email)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ points_phase1: pts1, points_phase2: pts2 + pts3 + pts4 + pts6, total_points: pts1 + pts2 + pts3 + pts4 + pts6, last_updated: new Date().toISOString() })
+    });
+  }
+
+  showToast('✅ Recalcul complet terminé !');
+  await loadParticipants();
+}
+
+function toggleSection(bodyId, chevId) {
+  const body = document.getElementById(bodyId);
+  const chev = document.getElementById(chevId);
+  if (!body) return;
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  if (chev) chev.classList.toggle('open', !isOpen);
+}
+
+async function loadRecapList() {
+  const container = document.getElementById('recapList');
+  if (!container) return;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/scores?select=email,pseudo,total_points,points_phase1,points_phase2&order=total_points.desc`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    const data = await res.json();
+    if (!data.length) { container.innerHTML = '<p style="color:#5a7a9a;font-size:13px">Aucun participant.</p>'; return; }
+    container.innerHTML = data.map(p => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1e3356;cursor:pointer" onclick="copyRecapEmail('${p.email}')">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#fff">${p.pseudo}</div>
+          <div style="font-size:11px;color:#5a7a9a">${p.email}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:14px;font-weight:700;color:#d4af37">${p.total_points} pts</div>
+          <div style="font-size:10px;color:#5a7a9a">${p.points_phase1}P1 · ${p.points_phase2}P2+</div>
+        </div>
+      </div>`).join('');
+  } catch(e) { container.innerHTML = '<p style="color:#e07070;font-size:13px">Erreur de chargement.</p>'; }
+}
+
+function copyRecapEmail(email) {
+  navigator.clipboard?.writeText(email).then(() => showToast('📋 Email copié !'));
+}
+
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = type === 'error' ? '#d44040' : '#2ea55a';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+document.getElementById('recapOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeRecap();
+});
+</script>
+</body>
+</html>
